@@ -1,0 +1,119 @@
+/* Additional styles for NotebookLM Citation Legend */
+
+/* Ensure the legend container doesn't interfere with page layout */
+#notebooklm-citation-legend {
+    pointer-events: auto;
+    z-index: 2147483647; /* Highest possible z-index */
+}
+
+/* Style for highlighted citations when hovering */
+sup.citation-highlight {
+    background-color: rgba(26, 115, 232, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+sup.citation-highlight:hover {
+    background-color: rgba(26, 115, 232, 0.2);
+    cursor: pointer;
+}
+
+/* Animation for new citations being detected */
+@keyframes citation-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.citation-new {
+    animation: citation-pulse 0.5s ease-in-out;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    #notebooklm-citation-legend {
+        top: 10px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    #notebooklm-citation-legend .legend-panel {
+        background: #2d2d30;
+        border-color: #3e3e42;
+        color: #cccccc;
+    }
+    
+    #notebooklm-citation-legend .legend-header {
+        color: #569cd6;
+        border-bottom-color: #3e3e42;
+    }
+    
+    #notebooklm-citation-legend .citation-item {
+        background: #3e3e42;
+        border-left-color: #569cd6;
+    }
+    
+    #notebooklm-citation-legend .citation-source {
+        color: #cccccc;
+    }
+    
+    #notebooklm-citation-legend .toggle-button {
+        color: #cccccc;
+    }
+    
+    #notebooklm-citation-legend .toggle-button:hover {
+        color: #569cd6;
+    }
+    
+    #notebooklm-citation-legend .empty-state {
+        color: #cccccc;
+    }
+}
+
+/* Print styles - hide the legend when printing */
+@media print {
+    #notebooklm-citation-legend {
+        display: none !important;
+    }
+}
+
+/* Accessibility improvements */
+#notebooklm-citation-legend .legend-panel:focus-within {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+#notebooklm-citation-legend .toggle-button:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+/* Smooth transitions */
+#notebooklm-citation-legend * {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Scrollbar styling for the legend content */
+#notebooklm-citation-legend .legend-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notebooklm-citation-legend .legend-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#notebooklm-citation-legend .legend-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#notebooklm-citation-legend .legend-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

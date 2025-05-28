@@ -1,0 +1,28 @@
+Hey everyone,
+
+This is a follow-up to my previous request regarding citation mapping in Google NotebookLM. I've tried building three different Chrome extensions (all available on GitHub) to automate or improve the citation workflow, but unfortunately, I'm stuck and lack the technical know-how to get them fully working.
+
+Here's a quick rundown of what each extension does:
+
+**notebooklmExtension**
+- Adds a live citation legend to NotebookLM.
+- Exports mapped citations when copying text.
+- Includes a popup UI for user interaction.
+- Uses a background worker for additional logic.
+
+**v2NotebooklmCitations**
+- Maps citation numbers to full source filenames.
+- Displays a simple mapping legend directly on the page.
+- Minimalist: only uses a content script, no popup or background worker.
+
+**v3NotebooklmCitations**
+- Maps citation numbers to source filenames in NotebookLM.
+- Provides a popup UI for user interaction.
+- Uses a background worker for logic.
+- Focuses on mapping and UI, but with fewer features than notebooklmExtension.
+
+I've tried both UI-based and script-based approaches, but I keep running into issues, especially when it comes to using Chrome's inspection tools to extract the right data for finalizing the workflow. I have no idea how to properly use the Chrome inspector to filter out the important elements or data I need.
+
+If anyone here has enough expertise to take a look at these extensions and maybe help turn them into something truly functional, I'd really appreciate it! The code is up on GitHub here: [your link]
+
+Thanks in advance!

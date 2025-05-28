@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 320px;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            width: 24px;
+            height: 24px;
+            background: #1a73e8;
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .title {
+            font-weight: 600;
+            color: #202124;
+        }
+        
+        .toggle-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .toggle-label {
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background-color: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .toggle-switch.active {
+            background-color: #1a73e8;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+        
+        .status {
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .status.active {
+            background: #e8f5e8;
+            color: #137333;
+            border: 1px solid #34a853;
+        }
+        
+        .status.inactive {
+            background: #fce8e6;
+            color: #d93025;
+            border: 1px solid #ea4335;
+        }
+        
+        .citations-section {
+            margin-top: 16px;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+        
+        .citation-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        
+        .citation-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .citation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .citation-number {
+            background: #1a73e8;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        .citation-name {
+            flex: 1;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .empty-citations {
+            padding: 16px;
+            text-align: center;
+            color: #5f6368;
+            font-style: italic;
+            font-size: 13px;
+        }
+        
+        .export-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .export-btn {
+            width: 100%;
+            padding: 8px 16px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .export-btn:hover {
+            background: #1557b0;
+        }
+        
+        .export-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .info-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: #e8f0fe;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #1a73e8;
+        }
+        
+        .info-section strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">C</div>
+        <div class="title">NotebookLM Citation Legend</div>
+    </div>
+    
+    <div class="toggle-section">
+        <div class="toggle-label">Extension aktiviert</div>
+        <div class="toggle-switch" id="toggleSwitch">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+    
+    <div class="status" id="status">
+        <span id="statusText">Überprüfe Status...</span>
+    </div>
+    
+    <div class="citations-section">
+        <div class="section-title">Gefundene Zitate</div>
+        <div class="citation-list" id="citationList">
+            <div class="empty-citations">Lade Zitate...</div>
+        </div>
+    </div>
+    
+    <div class="export-section">
+        <button class="export-btn" id="exportBtn" disabled>
+            Zitatlegende als Text kopieren
+        </button>
+    </div>
+    
+    <div class="info-section">
+        <strong>Verwendung:</strong>
+        Kopiere einfach Text aus NotebookLM - die Quellenangaben werden automatisch hinzugefügt!
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

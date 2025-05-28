@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      min-height: 400px;
+      padding: 16px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+    .status {
+      padding: 12px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .mappings {
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 16px;
+    }
+    .mapping-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+    .mapping-item:last-child {
+      border-bottom: none;
+    }
+    .citation-num {
+      font-weight: bold;
+      color: #4285f4;
+    }
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    .primary {
+      background: #4285f4;
+      color: white;
+    }
+    .primary:hover {
+      background: #3367d6;
+    }
+    .secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .secondary:hover {
+      background: #e0e0e0;
+    }
+    .error {
+      color: #d93025;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 NotebookLM Citation Mapper</h1>
+  <div class="status">
+    <div id="status-text">Connecting to NotebookLM...</div>
+  </div>
+  <div class="mappings" id="mappings-container">
+    <div class="loading">Loading citations...</div>
+  </div>
+  <div class="buttons">
+    <button class="primary" id="copy-btn">Copy Mappings</button>
+    <button class="secondary" id="rescan-btn">Rescan Page</button>
+  </div>
+  <div class="error" id="error-message" style="display: none;"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

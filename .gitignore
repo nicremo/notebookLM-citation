@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Chrome Extension build artifacts
+*.crx
+*.pem
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Logs
+logs/
+*.log
+
+# Misc
+Thumbs.db

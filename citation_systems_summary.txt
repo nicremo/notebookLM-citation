@@ -1,0 +1,16 @@
+**notebooklmExtension**
+- Adds a live citation legend to NotebookLM.
+- Exports mapped citations when copying text.
+- Includes a popup UI for user interaction.
+- Uses a background worker for additional logic.
+
+**v2NotebooklmCitations**
+- Maps citation numbers to full source filenames.
+- Displays a simple mapping legend directly on the page.
+- Minimalist: only uses a content script, no popup or background worker.
+
+**v3NotebooklmCitations**
+- Maps citation numbers to source filenames in NotebookLM.
+- Provides a popup UI for user interaction.
+- Uses a background worker for logic.
+- Focuses on mapping and UI, but with fewer features than notebooklmExtension.
