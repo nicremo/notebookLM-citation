@@ -1,980 +1,220 @@
-// content.js - Main content script for NotebookLM Citation Mapper
+// NotebookLM Citation Source Mapper Content Script (v3)
 
-class NotebookLMCitationMapper {
+(function () {
+  let isMapping = false;
+  let currentMappings = [];
 
-  constructor() {
-
-    this.citationMap = new Map();
-
-    this.sourceDocuments = new Map();
-
-    this.observer = null;
-
-    this.isProcessing = false;
-
-    
-
-    // Start the extension
-
-    this.init();
-
-  }
-
-  init() {
-    console.log('NotebookLM Citation Mapper initialized');
-    // Log current URL and time for debugging
-    console.log('Current URL:', window.location.href, 'Time:', new Date().toISOString());
-
-    // Initial scan
-    this.scanForCitations();
-    this.scanForSourceDocuments();
-
-    // Set up mutation observer for dynamic content
-    this.setupMutationObserver();
-
-    // Add UI elements
-    this.createUI();
-
-    // Listen for messages from popup/background
-    this.setupMessageListener();
-
-    // Add manual rescan button for debugging
-    window.rescanNotebookLMCitations = () => {
-      console.log('Manual rescan triggered');
-      this.scanForCitations();
-      this.scanForSourceDocuments();
-    };
-    console.log('You can now call window.rescanNotebookLMCitations() in the console to force a rescan.');
-
-    // Add periodic polling as fallback in case MutationObserver misses dynamic loads
-    setInterval(() => {
-      this.scanForCitations();
-    }, 3000);
-  }
-
-  // Scan the page for citation buttons
-
-  scanForCitations() {
-
-    const citationButtons = document.querySelectorAll('button.citation-marker');
-
-    console.log(`Found ${citationButtons.length} citation buttons`);
-
-    
-
-    citationButtons.forEach(button => {
-
-      this.processCitationButton(button);
-
+  function copyText(text) {
+    return navigator.clipboard.writeText(text).catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
     });
-
   }
 
-  // Process individual citation button
+  function showLegendOverlay(legendText) {
+    let overlay = document.getElementById('notebooklm-citation-legend');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'notebooklm-citation-legend';
+      overlay.setAttribute('data-no-observe', 'true');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '20px';
+      overlay.style.right = '20px';
+      overlay.style.zIndex = 99999;
+      overlay.style.background = '#fff';
+      overlay.style.border = '1px solid #888';
+      overlay.style.borderRadius = '8px';
+      overlay.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      overlay.style.fontFamily = 'Arial, sans-serif';
+      overlay.style.fontSize = '16px';
+      overlay.style.color = '#222';
+      overlay.style.width = '350px';
+      overlay.style.height = '300px';
+      overlay.style.minWidth = '200px';
+      overlay.style.minHeight = '100px';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.resize = 'both';
+      overlay.style.overflow = 'hidden';
 
-  processCitationButton(button) {
+      const header = document.createElement('div');
+      header.style.cursor = 'move';
+      header.style.background = '#f1f1f1';
+      header.style.padding = '8px';
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.justifyContent = 'space-between';
+      header.style.borderBottom = '1px solid #ddd';
 
-    try {
+      const title = document.createElement('span');
+      title.textContent = 'Citation Legend';
+      header.appendChild(title);
 
-      // Extract visible citation number
+      const minBtn = document.createElement('button');
+      minBtn.textContent = '–';
+      minBtn.style.border = 'none';
+      minBtn.style.background = 'transparent';
+      minBtn.style.cursor = 'pointer';
+      minBtn.style.fontSize = '16px';
+      minBtn.style.lineHeight = '16px';
+      header.appendChild(minBtn);
+      overlay.appendChild(header);
 
-      const citationSpan = button.querySelector('span');
+      const content = document.createElement('div');
+      content.style.padding = '8px 16px 16px 16px';
+      content.style.flex = '1 1 auto';
+      content.style.overflowY = 'auto';
 
-      if (!citationSpan) return;
+      const copyBtn = document.createElement('button');
+      copyBtn.id = 'notebooklm-copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.style.marginBottom = '10px';
+      copyBtn.style.padding = '6px 12px';
+      copyBtn.style.border = '1px solid #888';
+      copyBtn.style.borderRadius = '4px';
+      copyBtn.style.background = '#f5f5f5';
+      copyBtn.style.cursor = 'pointer';
+      copyBtn.onclick = () => copyText(legendText);
+      content.appendChild(copyBtn);
 
-      
+      const legendPre = document.createElement('pre');
+      legendPre.id = 'notebooklm-citation-legend-text';
+      legendPre.style.whiteSpace = 'pre-wrap';
+      legendPre.textContent = legendText;
+      content.appendChild(legendPre);
 
-      const citationNumber = citationSpan.textContent.trim();
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
 
-      if (!citationNumber) return;
-
-      
-
-      // Try multiple approaches to get Angular data
-
-      const sourceInfo = this.extractSourceInfoFromButton(button);
-
-      
-
-      if (sourceInfo) {
-
-        this.citationMap.set(citationNumber, sourceInfo);
-
-        console.log(`Mapped citation ${citationNumber} to:`, sourceInfo);
-
-      } else {
-
-        console.warn(`Could not extract source info for citation ${citationNumber}`);
-
-      }
-
-      
-
-      // Add custom data attribute for easier tracking
-
-      button.setAttribute('data-citation-processed', 'true');
-
-      button.setAttribute('data-citation-number', citationNumber);
-
-      
-
-    } catch (error) {
-
-      console.error('Error processing citation button:', error);
-
-    }
-
-  }
-
-  // Extract source information from button using various Angular access methods
-
-  extractSourceInfoFromButton(button) {
-
-    let sourceInfo = null;
-
-    
-
-    // Method 1: Try to access Angular context directly
-
-    if (button.__ngContext__) {
-
-      sourceInfo = this.extractFromAngularContext(button.__ngContext__);
-
-    }
-
-    
-
-    // Method 2: Try to access component instance
-
-    if (!sourceInfo && button.__component__) {
-
-      sourceInfo = this.extractFromComponent(button.__component__);
-
-    }
-
-    
-
-    // Method 3: Try to access Angular debug data
-
-    if (!sourceInfo && window.ng) {
-
-      try {
-
-        const debugElement = window.ng.getComponent(button);
-
-        if (debugElement) {
-
-          sourceInfo = this.extractFromDebugElement(debugElement);
-
+      minBtn.onclick = () => {
+        const isCollapsed = content.style.display === 'none';
+        if (isCollapsed) {
+          content.style.display = 'block';
+          overlay.style.height = overlay.dataset.prevHeight || '300px';
+          overlay.style.minHeight = '100px';
+          overlay.style.resize = overlay.dataset.prevResize || 'both';
+          minBtn.textContent = '–';
+        } else {
+          overlay.dataset.prevHeight = overlay.style.height;
+          overlay.dataset.prevResize = overlay.style.resize;
+          content.style.display = 'none';
+          const headerHeight = header.offsetHeight;
+          overlay.style.height = headerHeight + 'px';
+          overlay.style.minHeight = headerHeight + 'px';
+          overlay.style.resize = 'none';
+          minBtn.textContent = '+';
         }
-
-      } catch (e) {
-
-        // ng might not be available in production
-
-      }
-
-    }
-
-    
-
-    // Method 4: Try to intercept click handler
-
-    if (!sourceInfo) {
-
-      sourceInfo = this.tryClickInterception(button);
-
-    }
-
-    
-
-    // Method 5: Search nearby DOM for clues
-
-    if (!sourceInfo) {
-
-      sourceInfo = this.searchNearbyDOM(button);
-
-    }
-
-    
-
-    return sourceInfo;
-
-  }
-
-  // Extract data from Angular context array
-
-  extractFromAngularContext(context) {
-
-    if (!Array.isArray(context)) return null;
-
-    
-
-    // Search through context array for relevant data
-
-    for (let i = 0; i < context.length; i++) {
-
-      const item = context[i];
-
-      
-
-      // Look for objects that might contain source info
-
-      if (item && typeof item === 'object') {
-
-        // Check for common property names
-
-        const possibleProps = ['source', 'sourceName', 'fileName', 'document', 
-
-                             'file', 'ref', 'reference', 'metadata', 'data'];
-
-        
-
-        for (const prop of possibleProps) {
-
-          if (item[prop]) {
-
-            return this.extractSourceDetails(item[prop]);
-
-          }
-
-        }
-
-        
-
-        // Deep search in object
-
-        const deepResult = this.deepSearchObject(item, possibleProps);
-
-        if (deepResult) return deepResult;
-
-      }
-
-    }
-
-    
-
-    return null;
-
-  }
-
-  // Extract from component instance
-
-  extractFromComponent(component) {
-
-    if (!component || typeof component !== 'object') return null;
-
-    
-
-    // Search component properties
-
-    const relevantProps = Object.keys(component).filter(key => 
-
-      key.includes('source') || key.includes('file') || 
-
-      key.includes('doc') || key.includes('ref')
-
-    );
-
-    
-
-    for (const prop of relevantProps) {
-
-      const value = component[prop];
-
-      if (value) {
-
-        return this.extractSourceDetails(value);
-
-      }
-
-    }
-
-    
-
-    return null;
-
-  }
-
-  // Deep search in objects
-
-  deepSearchObject(obj, targetProps, depth = 0, visited = new Set()) {
-
-    if (depth > 5 || !obj || typeof obj !== 'object' || visited.has(obj)) {
-
-      return null;
-
-    }
-
-    
-
-    visited.add(obj);
-
-    
-
-    for (const key in obj) {
-
-      try {
-
-        const value = obj[key];
-
-        
-
-        // Check if key matches target props
-
-        for (const prop of targetProps) {
-
-          if (key.toLowerCase().includes(prop)) {
-
-            const result = this.extractSourceDetails(value);
-
-            if (result) return result;
-
-          }
-
-        }
-
-        
-
-        // Recursive search
-
-        if (value && typeof value === 'object') {
-
-          const deepResult = this.deepSearchObject(value, targetProps, depth + 1, visited);
-
-          if (deepResult) return deepResult;
-
-        }
-
-      } catch (e) {
-
-        // Skip inaccessible properties
-
-      }
-
-    }
-
-    
-
-    return null;
-
-  }
-
-  // Extract source details from various formats
-
-  extractSourceDetails(data) {
-
-    if (typeof data === 'string') {
-
-      // Direct filename
-
-      if (data.includes('.') && data.length > 3) {
-
-        return { filename: data, type: 'direct' };
-
-      }
-
-    } else if (typeof data === 'object' && data) {
-
-      // Object with filename property
-
-      const filenameProps = ['name', 'filename', 'fileName', 'title', 'path'];
-
-      for (const prop of filenameProps) {
-
-        if (data[prop] && typeof data[prop] === 'string') {
-
-          return { filename: data[prop], type: 'object', fullData: data };
-
-        }
-
-      }
-
-    }
-
-    
-
-    return null;
-
-  }
-
-  // Try to intercept click handler
-
-  tryClickInterception(button) {
-
-    // Clone and replace button to remove existing handlers
-
-    const clone = button.cloneNode(true);
-
-    let capturedData = null;
-
-    
-
-    clone.addEventListener('click', function(e) {
-
-      e.preventDefault();
-
-      e.stopPropagation();
-
-      
-
-      // Try to access event data
-
-      if (e.detail && typeof e.detail === 'object') {
-
-        capturedData = e.detail;
-
-      }
-
-      
-
-      // Trigger original click
-
-      button.click();
-
-    }, true);
-
-    
-
-    // Temporarily replace
-
-    button.parentNode.replaceChild(clone, button);
-
-    setTimeout(() => {
-
-      clone.parentNode.replaceChild(button, clone);
-
-    }, 100);
-
-    
-
-    return capturedData;
-
-  }
-
-  // Search nearby DOM for context clues
-
-  searchNearbyDOM(button) {
-
-    // Look for nearby elements that might contain source info
-
-    const parent = button.closest('.citation-container, .reference-container, [class*="citation"]');
-
-    if (!parent) return null;
-
-    
-
-    // Search for hidden inputs or data attributes
-
-    const dataElements = parent.querySelectorAll('[data-source], [data-file], input[type="hidden"]');
-
-    for (const elem of dataElements) {
-
-      const value = elem.dataset.source || elem.dataset.file || elem.value;
-
-      if (value) {
-
-        return { filename: value, type: 'dom-nearby' };
-
-      }
-
-    }
-
-    
-
-    return null;
-
-  }
-
-  // Scan for source documents list
-
-  scanForSourceDocuments() {
-
-    // Method 1: Look for sidebar or source panel
-
-    const possibleContainers = [
-
-      '.source-list', '.sources-panel', '.notebook-sources',
-
-      '[class*="source"]', '[class*="document"]', '.sidebar'
-
-    ];
-
-    
-
-    for (const selector of possibleContainers) {
-
-      const containers = document.querySelectorAll(selector);
-
-      containers.forEach(container => {
-
-        this.extractSourcesFromContainer(container);
-
-      });
-
-    }
-
-    
-
-    // Method 2: Look for global Angular services
-
-    this.searchGlobalAngularServices();
-
-  }
-
-  // Extract sources from a container element
-
-  extractSourcesFromContainer(container) {
-
-    // Look for elements that might represent source documents
-
-    const sourceElements = container.querySelectorAll(
-
-      '[class*="source-item"], [class*="document-item"], ' +
-
-      '[class*="file-name"], .source, .document'
-
-    );
-
-    
-
-    sourceElements.forEach((elem, index) => {
-
-      const filename = elem.textContent.trim();
-
-      if (filename && filename.includes('.')) {
-
-        this.sourceDocuments.set(index + 1, filename);
-
-      }
-
-    });
-
-  }
-
-  // Search global Angular services
-
-  searchGlobalAngularServices() {
-
-    if (!window.ng) return;
-
-    
-
-    try {
-
-      // Try to get injector
-
-      const rootElement = document.querySelector('app-root, [ng-app], [class*="app"]');
-
-      if (rootElement && window.ng.getInjector) {
-
-        const injector = window.ng.getInjector(rootElement);
-
-        
-
-        // Try common service names
-
-        const serviceNames = ['SourceService', 'DocumentService', 'DataService'];
-
-        for (const name of serviceNames) {
-
-          try {
-
-            const service = injector.get(name);
-
-            if (service) {
-
-              this.extractSourcesFromService(service);
-
-            }
-
-          } catch (e) {
-
-            // Service not found
-
-          }
-
-        }
-
-      }
-
-    } catch (e) {
-
-      console.log('Could not access Angular services');
-
-    }
-
-  }
-
-  // Extract sources from a service
-
-  extractSourcesFromService(service) {
-
-    if (!service || typeof service !== 'object') return;
-
-    
-
-    // Look for arrays or maps of sources
-
-    for (const key in service) {
-
-      const value = service[key];
-
-      if (Array.isArray(value)) {
-
-        value.forEach((item, index) => {
-
-          if (item && item.filename) {
-
-            this.sourceDocuments.set(index + 1, item.filename);
-
-          }
-
-        });
-
-      }
-
-    }
-
-  }
-
-  // Set up mutation observer
-
-  setupMutationObserver() {
-
-    this.observer = new MutationObserver((mutations) => {
-
-      if (this.isProcessing) return;
-
-      
-
-      this.isProcessing = true;
-
-      setTimeout(() => {
-
-        mutations.forEach(mutation => {
-
-          mutation.addedNodes.forEach(node => {
-
-            if (node.nodeType === 1) { // Element node
-
-              // Check if it's a citation button
-
-              if (node.matches && node.matches('button.citation-marker')) {
-
-                this.processCitationButton(node);
-
-              }
-
-              
-
-              // Check for citation buttons in children
-
-              const buttons = node.querySelectorAll('button.citation-marker');
-
-              buttons.forEach(button => this.processCitationButton(button));
-
-            }
-
-          });
-
-        });
-
-        
-
-        this.isProcessing = false;
-
-      }, 100);
-
-    });
-
-    
-
-    this.observer.observe(document.body, {
-
-      childList: true,
-
-      subtree: true
-
-    });
-
-  }
-
-  // Create UI elements
-
-  createUI() {
-
-    // Create floating button
-
-    const floatingButton = document.createElement('div');
-
-    floatingButton.id = 'citation-mapper-button';
-
-    floatingButton.innerHTML = '📚';
-
-    floatingButton.style.cssText = `
-
-      position: fixed;
-
-      bottom: 20px;
-
-      right: 20px;
-
-      width: 50px;
-
-      height: 50px;
-
-      background: #4285f4;
-
-      color: white;
-
-      border-radius: 50%;
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-      cursor: pointer;
-
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-
-      z-index: 10000;
-
-      font-size: 24px;
-
-    `;
-
-    
-
-    floatingButton.addEventListener('click', () => this.showMappingLegend());
-
-    document.body.appendChild(floatingButton);
-
-  }
-
-  // Show mapping legend
-
-  showMappingLegend() {
-    // Remove existing legend if any
-    const existingLegend = document.getElementById('citation-mapper-legend');
-    if (existingLegend) {
-      existingLegend.remove();
-      return;
-    }
-
-    // Create legend container
-    const legendContainer = document.createElement('div');
-    legendContainer.id = 'citation-mapper-legend';
-    legendContainer.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 20px;
-      max-width: 600px;
-      max-height: 70vh;
-      overflow-y: auto;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      z-index: 10001;
-    `;
-
-    // Try to extract possible source file names from the DOM for dropdowns
-    const possibleSources = Array.from(document.querySelectorAll('div.source-title, .source-title, [class*="source"], [class*="document"], [class*="file"]'))
-      .map(el => el.textContent.trim())
-      .filter(txt => txt.length > 0 && txt.length < 200)
-      .filter((v, i, arr) => arr.indexOf(v) === i);
-
-    // Load manual mapping from localStorage
-    let manualMapping = {};
-    try {
-      manualMapping = JSON.parse(localStorage.getItem('notebooklmCitationManualMapping') || '{}');
-    } catch (e) {}
-
-    // Create content
-    let content = '<h3 style="margin-top: 0;">Citation Mapping Legend (manuelle Zuordnung möglich)</h3>';
-
-    if (this.citationMap.size === 0) {
-      content += '<p>No citations found yet. Try clicking on some citations first.</p>';
+      };
+
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
+      header.onmousedown = (e) => {
+        e.preventDefault();
+        dragOffsetX = e.clientX - overlay.offsetLeft;
+        dragOffsetY = e.clientY - overlay.offsetTop;
+        document.onmousemove = (ev) => {
+          ev.preventDefault();
+          overlay.style.left = ev.clientX - dragOffsetX + 'px';
+          overlay.style.top = ev.clientY - dragOffsetY + 'px';
+          overlay.style.right = 'auto';
+        };
+        document.onmouseup = () => {
+          document.onmousemove = null;
+          document.onmouseup = null;
+        };
+      };
     } else {
-      content += '<table style="width: 100%; border-collapse: collapse;">';
-      content += '<thead><tr><th style="text-align: left; padding: 8px; border-bottom: 2px solid #ccc;">Citation</th>';
-      content += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #ccc;">Source File (manuell zuordnen)</th></tr></thead>';
-      content += '<tbody>';
-
-      // Sort citations numerically
-      const sortedCitations = Array.from(this.citationMap.entries())
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-
-      sortedCitations.forEach(([citation, sourceInfo]) => {
-        const manualValue = manualMapping[citation] || '';
-        const filename = sourceInfo.filename || 'Unknown';
-        content += `<tr>`;
-        content += `<td style="padding: 8px; border-bottom: 1px solid #eee;">${citation}</td>`;
-        content += `<td style="padding: 8px; border-bottom: 1px solid #eee;">
-          <input type="text" class="manual-mapping-input" data-citation="${citation}" value="${manualValue || filename}" list="possible-sources-${citation}" style="width: 90%;" />
-          <datalist id="possible-sources-${citation}">
-            ${possibleSources.map(src => `<option value="${src}">`).join('')}
-          </datalist>
-        </td>`;
-        content += `</tr>`;
-      });
-
-      content += '</tbody></table>';
+      const legendPre = overlay.querySelector('#notebooklm-citation-legend-text');
+      if (legendPre) legendPre.textContent = legendText;
+      const copyBtn = overlay.querySelector('#notebooklm-copy-btn');
+      if (copyBtn) copyBtn.onclick = () => copyText(legendText);
     }
-
-    // Add buttons
-    content += '<div style="margin-top: 20px; text-align: right;">';
-    content += '<button id="save-mapping" style="margin-right: 10px; padding: 8px 16px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer;">Speichern</button>';
-    content += '<button id="copy-mapping" style="margin-right: 10px; padding: 8px 16px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy to Clipboard</button>';
-    content += '<button id="close-legend" style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>';
-    content += '</div>';
-
-    legendContainer.innerHTML = content;
-    document.body.appendChild(legendContainer);
-
-    // Add event listeners
-    document.getElementById('save-mapping').addEventListener('click', () => {
-      // Save manual mapping to localStorage
-      const inputs = legendContainer.querySelectorAll('.manual-mapping-input');
-      let newMapping = {};
-      inputs.forEach(input => {
-        newMapping[input.dataset.citation] = input.value.trim();
-      });
-      localStorage.setItem('notebooklmCitationManualMapping', JSON.stringify(newMapping));
-      alert('Manuelle Zuordnung gespeichert!');
-    });
-
-    document.getElementById('copy-mapping').addEventListener('click', () => this.copyMappingToClipboard(true));
-    document.getElementById('close-legend').addEventListener('click', () => legendContainer.remove());
   }
 
-  // Copy mapping to clipboard
-  copyMappingToClipboard(useManual = false) {
-    let text = 'Citation Mapping Legend\n';
-    text += '=====================\n\n';
-
-    // Load manual mapping if requested
-    let manualMapping = {};
-    if (useManual) {
-      try {
-        manualMapping = JSON.parse(localStorage.getItem('notebooklmCitationManualMapping') || '{}');
-      } catch (e) {}
+  async function expandAllCitationEllipses() {
+    const ellipses = Array.from(document.querySelectorAll('span[aria-label]')).filter(
+      span => span.textContent.trim() === '...'
+    );
+    ellipses.forEach(span => span.click());
+    if (ellipses.length) {
+      await new Promise(res => setTimeout(res, 200));
     }
+  }
 
-    const sortedCitations = Array.from(this.citationMap.entries())
-      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+  async function mapCitations() {
+    if (isMapping) return;
+    isMapping = true;
+    try {
+      await expandAllCitationEllipses();
+      const spans = Array.from(document.querySelectorAll('span[aria-label]'));
+      const uniqueCitations = {};
+      spans.forEach(span => {
+        const label = span.getAttribute('aria-label');
+        const match = label && label.match(/^(\d+):\s*(.+)$/);
+        if (match) {
+          uniqueCitations[match[1]] = match[2];
+        }
+      });
+      const sortedCitationNumbers = Object.keys(uniqueCitations)
+        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+      currentMappings = sortedCitationNumbers.map(n => ({
+        citation: n,
+        filename: uniqueCitations[n],
+      }));
+      const legendLines = currentMappings.map(
+        m => `Citation ${m.citation} → ${m.filename}`
+      );
+      const legendText = legendLines.length
+        ? 'Citation Mapping Legend\n=====================\n' + legendLines.join('\n')
+        : 'Citation Mapping Legend\n=====================\nNo citations found';
+      showLegendOverlay(legendText);
+    } finally {
+      isMapping = false;
+    }
+  }
 
-    sortedCitations.forEach(([citation, sourceInfo]) => {
-      let filename = sourceInfo.filename || 'Unknown';
-      if (useManual && manualMapping[citation]) {
-        filename = manualMapping[citation];
+  function observeCitations() {
+    const observer = new MutationObserver((mutations) => {
+      const shouldRun = mutations.some(m => {
+        if (m.target.closest('#notebooklm-citation-legend')) return false;
+        return Array.from(m.addedNodes).some(n => n.nodeType === 1 && !n.closest('#notebooklm-citation-legend'));
+      });
+      if (!shouldRun) return;
+      if (window.__notebooklmCitationLegendTimeout) {
+        clearTimeout(window.__notebooklmCitationLegendTimeout);
       }
-      text += `Citation ${citation} -> ${filename}\n`;
+      window.__notebooklmCitationLegendTimeout = setTimeout(() => {
+        if (!isMapping) {
+          mapCitations();
+        }
+      }, 500);
     });
-
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Mapping copied to clipboard!');
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-      alert('Failed to copy to clipboard. Check console for details.');
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
     });
   }
 
-  // Copy mapping to clipboard
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (request.action === 'getMappings') {
+      sendResponse({ mappings: currentMappings });
+    } else if (request.action === 'rescan' || request.action === 'showMappings') {
+      mapCitations().then(() => {
+        sendResponse({ mappings: currentMappings });
+      });
+      return true;
+    }
+  });
 
-  copyMappingToClipboard() {
-
-    let text = 'Citation Mapping Legend\n';
-
-    text += '=====================\n\n';
-
-    
-
-    const sortedCitations = Array.from(this.citationMap.entries())
-
-      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-
-    
-
-    sortedCitations.forEach(([citation, sourceInfo]) => {
-
-      const filename = sourceInfo.filename || 'Unknown';
-
-      text += `Citation ${citation} -> ${filename}\n`;
-
-    });
-
-    
-
-    navigator.clipboard.writeText(text).then(() => {
-
-      alert('Mapping copied to clipboard!');
-
-    }).catch(err => {
-
-      console.error('Failed to copy:', err);
-
-      alert('Failed to copy to clipboard. Check console for details.');
-
-    });
-
-  }
-
-  // Setup message listener for communication with popup/background
-
-  setupMessageListener() {
-
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-
-      if (request.action === 'getMappings') {
-
-        const mappings = Array.from(this.citationMap.entries()).map(([citation, sourceInfo]) => ({
-
-          citation,
-
-          filename: sourceInfo.filename || 'Unknown',
-
-          type: sourceInfo.type
-
-        }));
-
-        sendResponse({ mappings });
-
-      } else if (request.action === 'rescan') {
-
-        this.citationMap.clear();
-
-        this.scanForCitations();
-
-        this.scanForSourceDocuments();
-
-        sendResponse({ status: 'Rescan complete' });
-
-      }
-
-      
-
-      return true; // Keep message channel open for async response
-
-    });
-
-  }
-
-}
-
-// Initialize when DOM is ready
-
-if (document.readyState === 'loading') {
-
-  document.addEventListener('DOMContentLoaded', () => new NotebookLMCitationMapper());
-
-} else {
-
-  new NotebookLMCitationMapper();
-
-}
+  setTimeout(() => {
+    mapCitations();
+  }, 2000);
+  observeCitations();
+})();
