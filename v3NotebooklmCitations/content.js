@@ -202,6 +202,93 @@
     });
   }
 
+  function extractChatText() {
+    // Try to find the chat container
+    // NotebookLM uses various selectors, we try multiple approaches
+    const possibleSelectors = [
+      '[role="main"]',
+      'main',
+      '.chat-container',
+      '[class*="chat"]',
+      '[class*="response"]'
+    ];
+
+    let chatContainer = null;
+    for (const selector of possibleSelectors) {
+      chatContainer = document.querySelector(selector);
+      if (chatContainer && chatContainer.textContent.trim().length > 100) {
+        break;
+      }
+    }
+
+    if (!chatContainer) {
+      // Fallback: get the largest text container
+      const allDivs = Array.from(document.querySelectorAll('div'));
+      chatContainer = allDivs.reduce((largest, div) => {
+        const textLength = div.textContent.trim().length;
+        const largestLength = largest ? largest.textContent.trim().length : 0;
+        return textLength > largestLength ? div : largest;
+      }, null);
+    }
+
+    if (!chatContainer) {
+      return null;
+    }
+
+    // Extract text and preserve citation numbers
+    let text = '';
+
+    // Clone the container to avoid modifying the page
+    const clone = chatContainer.cloneNode(true);
+
+    // Remove script and style elements
+    clone.querySelectorAll('script, style, #notebooklm-citation-legend').forEach(el => el.remove());
+
+    // Find all text nodes and citation markers
+    function extractTextFromNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent;
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        // Check if this is a citation number (small superscript numbers)
+        if (node.tagName === 'SUP' ||
+            (node.textContent && /^\d+$/.test(node.textContent.trim()) &&
+             node.textContent.trim().length <= 2)) {
+          const num = node.textContent.trim();
+          if (num && /^\d+$/.test(num)) {
+            return ` [${num}] `;
+          }
+        }
+
+        // Recursively process children
+        let result = '';
+        for (const child of node.childNodes) {
+          result += extractTextFromNode(child);
+        }
+
+        // Add line breaks for block elements
+        if (['DIV', 'P', 'BR', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(node.tagName)) {
+          result += '\n';
+        }
+
+        return result;
+      }
+
+      return '';
+    }
+
+    text = extractTextFromNode(clone);
+
+    // Clean up the text
+    text = text
+      .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+      .replace(/[ \t]+/g, ' ') // Multiple spaces to single space
+      .trim();
+
+    return text;
+  }
+
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (request.action === 'getMappings') {
       sendResponse({ mappings: currentMappings });
@@ -209,6 +296,10 @@
       mapCitations().then(() => {
         sendResponse({ mappings: currentMappings });
       });
+      return true;
+    } else if (request.action === 'getChatText') {
+      const chatText = extractChatText();
+      sendResponse({ chatText: chatText });
       return true;
     }
   });
