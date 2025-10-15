@@ -44,10 +44,11 @@
     }
     .buttons {
       display: flex;
+      flex-direction: column;
       gap: 8px;
     }
     button {
-      flex: 1;
+      width: 100%;
       padding: 8px 16px;
       border: none;
       border-radius: 4px;
@@ -68,6 +69,13 @@
     }
     .secondary:hover {
       background: #e0e0e0;
+    }
+    .success {
+      background: #34a853;
+      color: white;
+    }
+    .success:hover {
+      background: #2d9247;
     }
     .error {
       color: #d93025;
@@ -90,8 +98,9 @@
     <div class="loading">Loading citations...</div>
   </div>
   <div class="buttons">
-    <button class="primary" id="copy-btn">Copy Mappings</button>
-    <button class="secondary" id="rescan-btn">Rescan Page</button>
+    <button class="success" id="copy-chat-btn">📄 Text mit Quellen kopieren</button>
+    <button class="primary" id="copy-btn">📋 Citation Mappings kopieren</button>
+    <button class="secondary" id="rescan-btn">🔄 Rescan Page</button>
   </div>
   <div class="error" id="error-message" style="display: none;"></div>
   <script src="popup.js"></script>

@@ -1,43 +1,91 @@
-# NotebookLM Citation Extensions
+# NotebookLM Citation Mapper
 
-This repository contains three different Chrome extensions for Google NotebookLM, each aiming to improve or automate citation mapping and management.
+A Chrome extension that automatically maps citation numbers to source filenames in Google NotebookLM and allows you to copy chat text with preserved citations.
 
-## Overview
+## Features
 
-### notebooklmExtension
-- Adds a live citation legend to NotebookLM.
-- Exports mapped citations when copying text.
-- Includes a popup UI for user interaction.
-- Uses a background worker for additional logic.
-
-### v2NotebooklmCitations
-- Maps citation numbers to full source filenames.
-- Displays a simple mapping legend directly on the page.
-- Minimalist: only uses a content script, no popup or background worker.
-
-### v3NotebooklmCitations
-- Maps citation numbers to source filenames in NotebookLM.
-- Provides a popup UI for user interaction.
-- Uses a background worker for logic.
-- Automatically expands hidden citation lists and shows a movable, minimisable, resizable legend overlay for copying mappings.
-- Popup can copy or rescan citation mappings directly from the active NotebookLM tab.
+- **Automatic Citation Mapping**: Scans NotebookLM pages and creates a mapping between citation numbers and source documents
+- **Copy Chat with Citations**: Extract the full chat text with citation numbers preserved as `[1]`, `[2]`, etc., with a complete source legend appended
+- **Citation Mapping Export**: Copy just the citation mappings to clipboard
+- **Smart Page Scanning**: Automatically detects new citations as they appear
+- **Manual Rescan**: Refresh the citation mappings on demand
 
 ## Installation
 
 1. Clone this repository:
-   ```
+   ```bash
    git clone https://github.com/nicremo/notebookLM-citation.git
+   cd notebookLM-citation
    ```
-2. Open Chrome and go to `chrome://extensions/`.
-3. Enable "Developer mode" (top right).
-4. Click "Load unpacked" and select one of the extension folders (`notebooklmExtension`, `v2NotebooklmCitations`, or `v3NotebooklmCitations`).
+
+2. Open Chrome and navigate to `chrome://extensions/`
+
+3. Enable "Developer mode" (toggle in top right corner)
+
+4. Click "Load unpacked" and select the `extension` folder from this repository
 
 ## Usage
 
-- Each extension targets [notebooklm.google.com](https://notebooklm.google.com).
-- See the folder README or code comments for details on how each extension works.
-- For more information, see `citation_systems_summary.txt` and `reddit_post_draft.txt`.
+1. Navigate to [notebooklm.google.com](https://notebooklm.google.com)
+
+2. The extension will automatically:
+   - Scan for citations in the current notebook
+   - Update citations as new content loads
+
+3. Click the extension icon in Chrome to see:
+   - **Citation Mappings**: List of all detected citations
+   - **📄 Text mit Quellen kopieren**: Copies the entire chat text with citations preserved
+   - **📋 Citation Mappings kopieren**: Copies just the citation legend
+   - **🔄 Rescan Page**: Manually refresh the citation mappings
+
+### Copy Format
+
+When you click "Text mit Quellen kopieren", the extension copies:
+
+```
+[Your chat text with citations preserved as [1], [2], etc.]
+
+─────────────────────
+Quellen:
+[1] → Document1.pdf
+[2] → Research_Paper.docx
+[3] → Notes.txt
+...
+```
+
+## How It Works
+
+The extension uses three main components:
+
+- **content.js**: Scans the page for citation markers (using `aria-label` attributes) and extracts chat text
+- **popup.js**: Provides the popup interface when clicking the extension icon
+- **background.js**: Handles context menu integration and background tasks
+
+### Technical Details
+
+- Built for **Manifest V3** (latest Chrome Extension API)
+- Uses **MutationObserver** to detect dynamic content changes
+- Automatically expands hidden citation lists (`...` buttons)
+- Smart fallback mechanisms for text extraction
+
+## Known Limitations
+
+- The citation mapping relies on NotebookLM's DOM structure and `aria-label` attributes
+- May break if Google significantly changes NotebookLM's interface
+- Chat text extraction uses heuristics and may occasionally miss content
 
 ## Contributing
 
-If you have expertise in Chrome extension development or citation mapping, feel free to open issues or submit pull requests. Any help to make these extensions more robust and user-friendly is highly appreciated!
+Contributions are welcome! If you encounter issues or have ideas for improvements:
+
+1. Open an issue describing the problem or feature request
+2. Submit a pull request with your changes
+
+## Credits
+
+- Original concept and implementation: [@nicremo](https://github.com/nicremo)
+- Major refactoring and improvements: [@DerSchiman](https://github.com/DerSchiman) (Ron Schimanski) - Huge thanks for making this project possible by completely rewriting the citation extraction logic and making it actually work!
+
+## License
+
+This project is open source and available for anyone to use and modify.

@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const statusText = document.getElementById('status-text');
   const mappingsContainer = document.getElementById('mappings-container');
   const copyBtn = document.getElementById('copy-btn');
+  const copyChatBtn = document.getElementById('copy-chat-btn');
   const rescanBtn = document.getElementById('rescan-btn');
   const errorMessage = document.getElementById('error-message');
 
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
       statusText.style.color = '#d93025';
       mappingsContainer.innerHTML = '<div class="loading">This extension only works on notebooklm.google.com</div>';
       copyBtn.disabled = true;
+      copyChatBtn.disabled = true;
       rescanBtn.disabled = true;
       return;
     }
@@ -74,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     mappingsContainer.innerHTML = html;
     copyBtn.disabled = false;
+    copyChatBtn.disabled = false;
   }
 
   // Copy mappings to clipboard
@@ -126,6 +129,63 @@ document.addEventListener('DOMContentLoaded', function() {
           rescanBtn.disabled = false;
           rescanBtn.textContent = 'Rescan Page';
         }, 500);
+      });
+    });
+  });
+
+  // Copy chat text with citations
+  copyChatBtn.addEventListener('click', function() {
+    if (currentMappings.length === 0) {
+      showError('Keine Citations gefunden. Bitte Rescan durchführen.');
+      return;
+    }
+
+    copyChatBtn.disabled = true;
+    copyChatBtn.textContent = 'Extrahiere Text...';
+
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'getChatText'}, function(response) {
+        if (chrome.runtime.lastError || !response) {
+          showError('Fehler beim Extrahieren des Chat-Textes.');
+          copyChatBtn.disabled = false;
+          copyChatBtn.textContent = '📄 Text mit Quellen kopieren';
+          return;
+        }
+
+        if (!response.chatText) {
+          showError('Kein Chat-Text gefunden.');
+          copyChatBtn.disabled = false;
+          copyChatBtn.textContent = '📄 Text mit Quellen kopieren';
+          return;
+        }
+
+        // Build the full text with citations at the end
+        let fullText = response.chatText;
+        fullText += '\n\n─────────────────────\n';
+        fullText += 'Quellen:\n';
+
+        // Add citation mappings
+        currentMappings.forEach(mapping => {
+          fullText += `[${mapping.citation}] → ${mapping.filename}\n`;
+        });
+
+        // Copy to clipboard
+        const textArea = document.createElement('textarea');
+        textArea.value = fullText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        // Show feedback
+        copyChatBtn.textContent = '✓ Kopiert!';
+        copyChatBtn.style.background = '#188038';
+
+        setTimeout(() => {
+          copyChatBtn.textContent = '📄 Text mit Quellen kopieren';
+          copyChatBtn.style.background = '#34a853';
+          copyChatBtn.disabled = false;
+        }, 2000);
       });
     });
   });
