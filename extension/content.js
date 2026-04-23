@@ -1,9 +1,18 @@
 // NotebookLM Citation Source Mapper Content Script (v3)
 
 (function () {
-  let isMapping = false;
+  let mappingPromise = null;
   let currentMappings = [];
 
+  function collectCitationLabels(scope) {
+    const map = {};
+    scope.querySelectorAll('span[aria-label]').forEach(span => {
+      const label = span.getAttribute('aria-label');
+      const match = label && label.match(/^(\d+):\s*(.+)$/);
+      if (match) map[match[1]] = match[2];
+    });
+    return map;
+  }
 
   async function expandAllCitationEllipses() {
     const ellipses = Array.from(document.querySelectorAll('span[aria-label]')).filter(
@@ -15,80 +24,70 @@
     }
   }
 
-  async function mapCitations() {
-    if (isMapping) return;
-    isMapping = true;
-    try {
-      await expandAllCitationEllipses();
+  function mapCitations() {
+    // Share a single in-flight promise so concurrent callers (observer + getChatText)
+    // all await the same run and see stamped buttons + current mappings together.
+    if (mappingPromise) return mappingPromise;
+    mappingPromise = (async () => {
+      try {
+        await expandAllCitationEllipses();
 
-      // Each AI response (.to-user-container) numbers its citations locally starting from 1,
-      // so the same local N means different documents across messages. Additionally, within a
-      // single response the same document may appear under several local numbers. Collapse both:
-      // assign one final global number per unique filename (by first appearance).
-      const responseContainers = Array.from(document.querySelectorAll('.to-user-container'));
+        // Each AI response (.to-user-container) numbers its citations locally starting from 1,
+        // so the same local N means different documents across messages. Additionally, within a
+        // single response the same document may appear under several local numbers. Collapse both:
+        // assign one final global number per unique filename (by first appearance).
+        const responseContainers = Array.from(document.querySelectorAll('.to-user-container'));
+        const perContainerLocal = [];
+        const filenameToFinal = new Map();
+        let nextFinal = 1;
 
-      if (responseContainers.length === 0) {
-        const spans = Array.from(document.querySelectorAll('span[aria-label]'));
-        const uniqueCitations = {};
-        spans.forEach(span => {
-          const label = span.getAttribute('aria-label');
-          const match = label && label.match(/^(\d+):\s*(.+)$/);
-          if (match) uniqueCitations[match[1]] = match[2];
+        responseContainers.forEach(container => {
+          const localMap = collectCitationLabels(container);
+          perContainerLocal.push({ container, localMap });
+          Object.keys(localMap)
+            .sort((a, b) => a - b)
+            .forEach(n => {
+              const filename = localMap[n];
+              if (!filenameToFinal.has(filename)) {
+                filenameToFinal.set(filename, nextFinal++);
+              }
+            });
         });
-        const sorted = Object.keys(uniqueCitations).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-        currentMappings = sorted.map(n => ({ citation: n, filename: uniqueCitations[n] }));
-        return;
-      }
 
-      // Pass 1: collect local (N → filename) for each response, and assign final numbers
-      // to unique filenames in first-appearance order.
-      const perContainerLocal = [];
-      const filenameToFinal = new Map();
-      let nextFinal = 1;
+        // Fallback: no per-response citations surfaced (aria-label legend may be rendered
+        // outside .to-user-container, or containers not yet in the DOM). Preserve the pre-refactor
+        // local-N semantics so that unstamped buttons in extractChatText render consistent numbers.
+        if (filenameToFinal.size === 0) {
+          const globalMap = collectCitationLabels(document);
+          currentMappings = Object.keys(globalMap)
+            .sort((a, b) => a - b)
+            .map(n => ({ citation: n, filename: globalMap[n] }));
+          return;
+        }
 
-      responseContainers.forEach(container => {
-        const spans = Array.from(container.querySelectorAll('span[aria-label]'));
-        const localMap = {};
-        spans.forEach(span => {
-          const label = span.getAttribute('aria-label');
-          const match = label && label.match(/^(\d+):\s*(.+)$/);
-          if (match) localMap[match[1]] = match[2];
-        });
-        perContainerLocal.push({ container, localMap });
-
-        Object.keys(localMap)
-          .map(Number)
-          .sort((a, b) => a - b)
-          .forEach(n => {
-            const filename = localMap[String(n)];
-            if (!filenameToFinal.has(filename)) {
-              filenameToFinal.set(filename, nextFinal++);
-            }
+        // Stamp every inline citation-marker button with its final global number so
+        // extractChatText can read it off the cloned DOM without re-resolving.
+        perContainerLocal.forEach(({ container, localMap }) => {
+          container.querySelectorAll('button.citation-marker, .citation-marker').forEach(button => {
+            const span = button.querySelector('span');
+            if (!span) return;
+            const localNum = span.textContent.trim();
+            if (!/^\d+$/.test(localNum)) return;
+            const filename = localMap[localNum];
+            if (!filename) return;
+            const finalN = filenameToFinal.get(filename);
+            if (finalN) button.dataset.globalCitation = String(finalN);
           });
-      });
-
-      // Pass 2: stamp every inline citation-marker button with its final global number
-      // so extractChatText can read it directly off the cloned DOM.
-      perContainerLocal.forEach(({ container, localMap }) => {
-        const buttons = container.querySelectorAll('button.citation-marker, .citation-marker');
-        buttons.forEach(button => {
-          const span = button.querySelector('span');
-          if (!span) return;
-          const localNum = span.textContent.trim();
-          if (!/^\d+$/.test(localNum)) return;
-          const filename = localMap[localNum];
-          if (!filename) return;
-          const finalN = filenameToFinal.get(filename);
-          if (finalN) button.dataset.globalCitation = String(finalN);
         });
-      });
 
-      currentMappings = Array.from(filenameToFinal.entries())
-        .map(([filename, finalN]) => ({ citation: String(finalN), filename }))
-        .sort((a, b) => parseInt(a.citation, 10) - parseInt(b.citation, 10));
-    } finally {
-      isMapping = false;
-    }
+        // Map preserves insertion order of nextFinal++, so entries are already in final-number order.
+        currentMappings = Array.from(filenameToFinal.entries())
+          .map(([filename, finalN]) => ({ citation: String(finalN), filename }));
+      } finally {
+        mappingPromise = null;
+      }
+    })();
+    return mappingPromise;
   }
 
   function observeCitations() {
@@ -101,9 +100,7 @@
         clearTimeout(window.__notebooklmCitationLegendTimeout);
       }
       window.__notebooklmCitationLegendTimeout = setTimeout(() => {
-        if (!isMapping) {
-          mapCitations();
-        }
+        mapCitations();
       }, 500);
     });
     observer.observe(document.body, {
@@ -200,8 +197,12 @@
       });
       return true;
     } else if (request.action === 'getChatText') {
-      const chatText = extractChatText();
-      sendResponse({ chatText: chatText });
+      // Await mapping so citation-marker buttons are stamped with globalCitation before extraction.
+      // Otherwise extractChatText falls back to local per-message numbers that would mismatch
+      // the Sources section (which uses currentMappings' global numbering).
+      mapCitations().then(() => {
+        sendResponse({ chatText: extractChatText() });
+      });
       return true;
     }
   });
