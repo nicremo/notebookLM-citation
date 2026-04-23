@@ -20,21 +20,72 @@
     isMapping = true;
     try {
       await expandAllCitationEllipses();
-      const spans = Array.from(document.querySelectorAll('span[aria-label]'));
-      const uniqueCitations = {};
-      spans.forEach(span => {
-        const label = span.getAttribute('aria-label');
-        const match = label && label.match(/^(\d+):\s*(.+)$/);
-        if (match) {
-          uniqueCitations[match[1]] = match[2];
-        }
+
+      // Each AI response (.to-user-container) numbers its citations locally starting from 1,
+      // so the same local N means different documents across messages. Additionally, within a
+      // single response the same document may appear under several local numbers. Collapse both:
+      // assign one final global number per unique filename (by first appearance).
+      const responseContainers = Array.from(document.querySelectorAll('.to-user-container'));
+
+      if (responseContainers.length === 0) {
+        const spans = Array.from(document.querySelectorAll('span[aria-label]'));
+        const uniqueCitations = {};
+        spans.forEach(span => {
+          const label = span.getAttribute('aria-label');
+          const match = label && label.match(/^(\d+):\s*(.+)$/);
+          if (match) uniqueCitations[match[1]] = match[2];
+        });
+        const sorted = Object.keys(uniqueCitations).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+        currentMappings = sorted.map(n => ({ citation: n, filename: uniqueCitations[n] }));
+        return;
+      }
+
+      // Pass 1: collect local (N → filename) for each response, and assign final numbers
+      // to unique filenames in first-appearance order.
+      const perContainerLocal = [];
+      const filenameToFinal = new Map();
+      let nextFinal = 1;
+
+      responseContainers.forEach(container => {
+        const spans = Array.from(container.querySelectorAll('span[aria-label]'));
+        const localMap = {};
+        spans.forEach(span => {
+          const label = span.getAttribute('aria-label');
+          const match = label && label.match(/^(\d+):\s*(.+)$/);
+          if (match) localMap[match[1]] = match[2];
+        });
+        perContainerLocal.push({ container, localMap });
+
+        Object.keys(localMap)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .forEach(n => {
+            const filename = localMap[String(n)];
+            if (!filenameToFinal.has(filename)) {
+              filenameToFinal.set(filename, nextFinal++);
+            }
+          });
       });
-      const sortedCitationNumbers = Object.keys(uniqueCitations)
-        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-      currentMappings = sortedCitationNumbers.map(n => ({
-        citation: n,
-        filename: uniqueCitations[n],
-      }));
+
+      // Pass 2: stamp every inline citation-marker button with its final global number
+      // so extractChatText can read it directly off the cloned DOM.
+      perContainerLocal.forEach(({ container, localMap }) => {
+        const buttons = container.querySelectorAll('button.citation-marker, .citation-marker');
+        buttons.forEach(button => {
+          const span = button.querySelector('span');
+          if (!span) return;
+          const localNum = span.textContent.trim();
+          if (!/^\d+$/.test(localNum)) return;
+          const filename = localMap[localNum];
+          if (!filename) return;
+          const finalN = filenameToFinal.get(filename);
+          if (finalN) button.dataset.globalCitation = String(finalN);
+        });
+      });
+
+      currentMappings = Array.from(filenameToFinal.entries())
+        .map(([filename, finalN]) => ({ citation: String(finalN), filename }))
+        .sort((a, b) => parseInt(a.citation, 10) - parseInt(b.citation, 10));
     } finally {
       isMapping = false;
     }
@@ -96,13 +147,16 @@
     // Based on debug: <button class="xap-inline-dialog citation-marker"><span>1</span></button>
     const citationButtons = clone.querySelectorAll('button.citation-marker, .citation-marker');
     citationButtons.forEach(button => {
+      const stamped = button.dataset ? button.dataset.globalCitation : null;
+      if (stamped) {
+        button.replaceWith(document.createTextNode(`[${stamped}]`));
+        return;
+      }
       const span = button.querySelector('span');
       if (span) {
         const citationNum = span.textContent.trim();
         if (/^\d+$/.test(citationNum)) {
-          // Replace the button with [N] text
-          const textNode = document.createTextNode(`[${citationNum}]`);
-          button.replaceWith(textNode);
+          button.replaceWith(document.createTextNode(`[${citationNum}]`));
         }
       }
     });
