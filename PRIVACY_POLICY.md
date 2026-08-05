@@ -28,9 +28,9 @@ NotebookLM Citation Mapper is a Chrome extension that enhances your experience w
 - **What we access:** Permission to write text to your system clipboard
 - **What we don't do:** We never read from your clipboard or access clipboard history
 
-#### `host_permissions` for `https://notebooklm.google.com/*`
+#### `host_permissions` for `https://notebook.google.com/*`
 - **Why we need it:** To function specifically on Google NotebookLM pages
-- **What we access:** Only pages on notebooklm.google.com domain
+- **What we access:** Only pages on notebook.google.com domain
 - **What we don't do:** We never access any other websites or Google services
 
 ## Local Processing

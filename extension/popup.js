@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let isNotebookLM = false;
     try {
       const url = new URL(currentTab.url);
-      isNotebookLM = url.hostname === 'notebooklm.google.com';
+      isNotebookLM = url.hostname === 'notebook.google.com';
     } catch (e) {
       isNotebookLM = false;
     }
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isNotebookLM) {
       statusText.textContent = 'Please open Google NotebookLM';
       statusText.style.color = '#d93025';
-      mappingsContainer.innerHTML = '<div class="loading">This extension only works on notebooklm.google.com</div>';
+      mappingsContainer.innerHTML = '<div class="loading">This extension only works on notebook.google.com</div>';
       copyBtn.disabled = true;
       copyChatBtn.disabled = true;
       copyRichBtn.disabled = true;

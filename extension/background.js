@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener(() => {
     id: 'notebooklm-citation-mapper',
     title: 'Show Citation Mappings',
     contexts: ['page'],
-    documentUrlPatterns: ['https://notebooklm.google.com/*']
+    documentUrlPatterns: ['https://notebook.google.com/*']
   });
 });
 
@@ -23,7 +23,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Listen for tab updates to inject content script if needed
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('notebooklm.google.com')) {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('notebook.google.com')) {
     // Content script should be automatically injected via manifest
     // This is just a fallback if needed
     chrome.scripting.executeScript({

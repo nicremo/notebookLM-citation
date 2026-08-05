@@ -9,11 +9,11 @@
     "storage"
   ],
   "host_permissions": [
-    "https://notebooklm.google.com/*"
+    "https://notebook.google.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://notebooklm.google.com/*"],
+      "matches": ["https://notebook.google.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
