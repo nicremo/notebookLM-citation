@@ -87,6 +87,8 @@ The extension uses three main components:
 - Fixed collapsed citations being silently skipped, which dropped roughly a third of all citations
 - Fixed `more_horiz` icon text leaking into copied output
 - Fixed every paragraph appearing twice in copied output
+- Fixed the product announcement banner being copied along with the answer
+- Fixed a notebook with no chat yet copying hidden accessibility text instead of reporting that there is nothing to copy
 - Added a selector contract test so the next interface change is diagnosable in seconds
 
 **After updating, reload any Gemini Notebook tab you already had open.** Chrome only injects

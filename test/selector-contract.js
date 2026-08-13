@@ -77,21 +77,36 @@
       `range ${numbers[0]}..${numbers[numbers.length - 1]}, gaps: ${hasGaps}`
   );
 
-  // --- C5: chat text container is findable ---------------------------------
-  const containers = document.querySelectorAll(
-    '[class*="response"], [class*="message"], [class*="chat"]'
+  // --- C5: chat text container is findable, and is the real one ------------
+  // Angular Material parks an off-screen container of tooltip strings in the
+  // DOM whose class contains "message". On a notebook with no chat it is the
+  // largest match, so the container search has to skip hidden subtrees.
+  const containers = Array.from(
+    document.querySelectorAll('[class*="response"], [class*="message"], [class*="chat"]')
+  ).filter(
+    el => !el.closest('.cdk-visually-hidden') && el.getAttribute('aria-hidden') !== 'true'
   );
-  const main = Array.from(containers).reduce(
+  const main = containers.reduce(
     (largest, c) =>
       c.textContent.trim().length > (largest ? largest.textContent.trim().length : 0)
         ? c
         : largest,
     null
   );
+  const hiddenWouldWin = Array.from(
+    document.querySelectorAll('[class*="response"], [class*="message"], [class*="chat"]')
+  ).some(
+    el =>
+      el.closest('.cdk-visually-hidden') &&
+      el.textContent.trim().length > (main ? main.textContent.trim().length : 0)
+  );
   check(
-    'C5 chat container is findable',
-    !!main && main.textContent.trim().length > 0,
-    main ? `container class = ${String(main.className).slice(0, 60)}` : 'no container'
+    'C5 chat container is findable and not an a11y container',
+    !!main && main.textContent.trim().length > 0 && !hiddenWouldWin,
+    main
+      ? `container class = ${String(main.className).slice(0, 50)}, ` +
+        `hidden container would have won: ${hiddenWouldWin}`
+      : 'no container (expected on a notebook with no chat yet)'
   );
 
   // --- C6: extraction must not emit any paragraph twice --------------------
@@ -150,6 +165,31 @@
     ligatureLeaks === 0,
     `${nonNumericMarkers.length} markers without a numeric span, ` +
       `${ligatureLeaks} "more_horiz" occurrences survived marker replacement`
+  );
+
+  // --- C8: product UI must not leak into the extracted answer --------------
+  // div[class*="text"] also matches div.banner-text, the announcement strip
+  // Google renders inside the chat panel. Without removing it by class, every
+  // copy made while the banner is visible ends with marketing copy.
+  let uiLeak = null;
+  if (main) {
+    const probe = main.cloneNode(true);
+    probe
+      .querySelectorAll(
+        'script, style, button:not(.citation-marker), [class*="input"], ' +
+          '[class*="footer"], [class*="toolbar"], [class*="banner"]'
+      )
+      .forEach(el => el.remove());
+    const bannerText = document.querySelector('[class*="banner"]');
+    const sample = bannerText ? bannerText.textContent.trim().slice(0, 40) : null;
+    uiLeak = sample ? probe.textContent.includes(sample) : false;
+  }
+  check(
+    'C8 announcement banner does not leak into extracted text',
+    uiLeak === false,
+    uiLeak === null
+      ? 'no container to test'
+      : `banner present on page: ${!!document.querySelector('[class*="banner"]')}, leaked: ${uiLeak}`
   );
 
   const passed = results.filter(r => r.status === 'PASS').length;

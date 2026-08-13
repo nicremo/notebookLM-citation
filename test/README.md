@@ -19,9 +19,10 @@ reports "it stopped working", run this first. It tells you which assumption brok
 | C2 | The citation number to filename mapping broke. This is the core feature. |
 | C3 | The collapsed-citation button changed shape. Citations will silently go missing. |
 | C4 | Expanding does not reveal hidden citations. Users get an incomplete list. |
-| C5 | The chat container moved. Copy-with-citations returns nothing. |
+| C5 | The chat container moved, or an off-screen a11y container outranks it. On a notebook with no chat that container holds tooltip strings, which would get copied as if they were the answer. |
 | C6 | The innermost-match filter no longer deduplicates. Copied text contains paragraphs twice. |
 | C7 | Ligature text survives extraction. Copied output will contain `more_horiz` where citations were collapsed. |
+| C8 | Product UI leaks into the answer. `div[class*="text"]` also matches `div.banner-text`, so copies made while the announcement banner shows would end with marketing copy. |
 
 These checks describe what the DOM offers, not what `extension/content.js` currently does
 with it. All of them passing means the extraction strategy is still viable. It does not by

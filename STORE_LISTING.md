@@ -139,14 +139,16 @@ English (Deutsch optional)
 5. **Settings/options** (if any)
 
 ## Version
-1.0.0
+1.3.0
 
 ## What's New in This Version
-Initial release with core features:
-- Copy chat text with preserved citations
-- Automatic citation mapping
-- Citation legend export
-- Manual rescan functionality
+Works again after Google renamed NotebookLM to Gemini Notebook:
+- Supports the new address notebook.google.com (the old one kept working via redirect, which is why the extension stopped being loaded at all)
+- Collapsed citations are expanded again, so no sources are silently skipped
+- Removed stray icon text and duplicated paragraphs from copied output
+- Copies no longer pick up the product announcement banner
+
+After updating, reload any Gemini Notebook tab you already had open.
 
 ## Developer Information
 - **Developer Name:** Your Name/Organization
