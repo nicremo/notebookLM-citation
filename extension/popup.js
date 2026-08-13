@@ -151,19 +151,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const currentTab = tabs[0];
 
-    // Secure URL validation
-    let isNotebookLM = false;
-    try {
-      const url = new URL(currentTab.url);
-      isNotebookLM = url.hostname === 'notebooklm.google.com';
-    } catch (e) {
-      isNotebookLM = false;
-    }
+    // Secure URL validation, shared with background.js via constants.js
+    const isNotebookLM = isNotebookUrl(currentTab.url);
 
     if (!isNotebookLM) {
-      statusText.textContent = 'Please open Google NotebookLM';
+      statusText.textContent = 'Please open Gemini Notebook';
       statusText.style.color = '#d93025';
-      mappingsContainer.innerHTML = '<div class="loading">This extension only works on notebooklm.google.com</div>';
+      mappingsContainer.innerHTML = '<div class="loading">This extension only works on notebook.google.com</div>';
       copyBtn.disabled = true;
       copyChatBtn.disabled = true;
       copyRichBtn.disabled = true;
