@@ -5,14 +5,33 @@
   let currentMappings = [];
 
 
+  // Google renders the "show remaining citations" affordance as a Material
+  // Symbols ligature button (<button class="citation-marker">more_horiz</button>),
+  // not as a span[aria-label] whose text is "...". The older shapes are kept as
+  // fallbacks in case Google reverts or localises this.
+  function isEllipsisButton(el) {
+    const text = el.textContent.trim();
+    return text === 'more_horiz' || text === '...' || text === '…';
+  }
+
   async function expandAllCitationEllipses() {
-    const ellipses = Array.from(document.querySelectorAll('span[aria-label]')).filter(
-      span => span.textContent.trim() === '...'
-    );
-    ellipses.forEach(span => span.click());
-    if (ellipses.length) {
-      await new Promise(res => setTimeout(res, 200));
+    let clicked = 0;
+
+    // Expanding one group can reveal another collapsed group, so repeat until
+    // nothing is left. The cap keeps a Google-side change from spinning forever.
+    for (let round = 0; round < 3; round++) {
+      const buttons = Array.from(
+        document.querySelectorAll('button.citation-marker')
+      ).filter(isEllipsisButton);
+
+      if (!buttons.length) break;
+
+      buttons.forEach(button => button.click());
+      clicked += buttons.length;
+      await new Promise(res => setTimeout(res, 400));
     }
+
+    return clicked;
   }
 
   async function mapCitations() {
