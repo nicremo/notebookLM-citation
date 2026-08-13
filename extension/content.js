@@ -130,9 +130,19 @@
       }
     });
 
-    // Extract text from paragraphs
+    // Extract text from paragraphs, keeping only the innermost matches.
     // Based on debug: <div class="paragraph normal ng-star-inserted">
-    const paragraphs = clone.querySelectorAll('.paragraph.normal, .paragraph, div[class*="text"], p');
+    //
+    // The selectors overlap hierarchically: div.message-text-content matches
+    // div[class*="text"] AND contains every .paragraph inside it. Without this
+    // filter the container emits the full answer once and each child emits its
+    // own slice again, so every paragraph lands in the output twice.
+    const candidates = Array.from(
+      clone.querySelectorAll('.paragraph, div[class*="text"], p')
+    );
+    const paragraphs = candidates.filter(
+      node => !candidates.some(other => other !== node && node.contains(other))
+    );
 
     let text = '';
 
