@@ -15,11 +15,19 @@
   }
 
   // Clicking a button mutates the DOM, which wakes the MutationObserver below,
-  // which calls mapCitations() again. That settles on its own as long as an
-  // expanded group stays expanded. If Angular ever re-collapses a group, the
-  // two would keep triggering each other, so never click the same node twice.
-  // A WeakSet lets discarded nodes be collected, and a genuinely new group
-  // arrives as a new node, so it still gets expanded.
+  // which calls mapCitations() again.
+  //
+  // In practice this settles by itself: Angular rewrites the button's content
+  // in the same tick as the click, so isEllipsisButton() stops matching it
+  // immediately and the next round finds nothing. The WeakSet is a backstop
+  // for the case where that stops being true and a clicked node stays
+  // clickable, which would otherwise let the observer and the click loop feed
+  // each other indefinitely.
+  //
+  // The trade-off is deliberate: if Google ever genuinely re-collapses a group
+  // the same node will not be expanded a second time, costing those citations.
+  // A runaway click loop is immediate and visible to the user, silently losing
+  // a few citations is not, so the backstop guards the louder failure.
   const clickedEllipses = new WeakSet();
 
   async function expandAllCitationEllipses() {
@@ -97,8 +105,18 @@
     // - Text is in: <div class="paragraph normal ng-star-inserted">
     // - Multiple chat containers exist with [class*="response"] or [class*="message"]
 
-    // Find all potential chat/response containers
-    const containers = document.querySelectorAll('[class*="response"], [class*="message"], [class*="chat"]');
+    // Find all potential chat/response containers.
+    //
+    // Skip anything inside an off-screen accessibility container. Angular
+    // Material parks a cdk-describedby-message-container full of tooltip
+    // strings in the DOM, and its class contains "message", so it matches the
+    // selector below. On a notebook with no chat yet it is the LARGEST match,
+    // and the extension would happily copy a wall of tooltip text.
+    const containers = Array.from(
+      document.querySelectorAll('[class*="response"], [class*="message"], [class*="chat"]')
+    ).filter(el =>
+      !el.closest('.cdk-visually-hidden') && el.getAttribute('aria-hidden') !== 'true'
+    );
 
     if (!containers.length) {
       console.error('No chat containers found');
@@ -119,8 +137,9 @@
     // Clone to avoid modifying the actual DOM
     const clone = mainContainer.cloneNode(true);
 
-    // Remove unwanted elements
-    clone.querySelectorAll('script, style, button:not(.citation-marker), [class*="input"], [class*="footer"], [class*="toolbar"]').forEach(el => el.remove());
+    // Remove unwanted elements. "banner" covers the product announcement strip
+    // Google shows inside the chat panel, which is not part of the answer.
+    clone.querySelectorAll('script, style, button:not(.citation-marker), [class*="input"], [class*="footer"], [class*="toolbar"], [class*="banner"]').forEach(el => el.remove());
 
     // Replace numeric citation buttons with [N], and delete the rest.
     // Based on debug: <button class="xap-inline-dialog citation-marker"><span>1</span></button>
@@ -148,6 +167,12 @@
     // div[class*="text"] AND contains every .paragraph inside it. Without this
     // filter the container emits the full answer once and each child emits its
     // own slice again, so every paragraph lands in the output twice.
+    //
+    // The list stays deliberately broad. Narrowing it to .paragraph alone
+    // looks tempting (it would exclude UI like div.banner-text on its own),
+    // but it was measured to drop real content: the notebook summary and the
+    // user's own question do not carry that class. Unwanted UI is removed by
+    // class above instead, which costs nothing when a match is absent.
     const candidates = Array.from(
       clone.querySelectorAll('.paragraph, div[class*="text"], p')
     );
