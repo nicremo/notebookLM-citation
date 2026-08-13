@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://notebook.google.com/*",

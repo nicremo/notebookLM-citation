@@ -22,21 +22,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// Listen for tab updates to inject content script if needed
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && isNotebookUrl(tab.url)) {
-    // Content script should be automatically injected via manifest
-    // This is just a fallback if needed
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['content.js']
-    }).catch(err => {
-      // Script might already be injected
-      console.log('Script injection skipped:', err.message);
-    });
-  }
-});
-
 // Handle messages from content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getTabInfo') {
