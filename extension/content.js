@@ -111,18 +111,22 @@
     // Remove unwanted elements
     clone.querySelectorAll('script, style, button:not(.citation-marker), [class*="input"], [class*="footer"], [class*="toolbar"]').forEach(el => el.remove());
 
-    // Replace citation buttons with [N] format
+    // Replace numeric citation buttons with [N], and delete the rest.
     // Based on debug: <button class="xap-inline-dialog citation-marker"><span>1</span></button>
+    //
+    // The "more_horiz" ligature buttons have no numeric <span>, so without the
+    // else branch their raw ligature text leaks into the copied output. The
+    // generic button filter above does not catch them because they carry the
+    // .citation-marker class themselves.
     const citationButtons = clone.querySelectorAll('button.citation-marker, .citation-marker');
     citationButtons.forEach(button => {
       const span = button.querySelector('span');
-      if (span) {
-        const citationNum = span.textContent.trim();
-        if (/^\d+$/.test(citationNum)) {
-          // Replace the button with [N] text
-          const textNode = document.createTextNode(`[${citationNum}]`);
-          button.replaceWith(textNode);
-        }
+      const citationNum = span ? span.textContent.trim() : '';
+
+      if (/^\d+$/.test(citationNum)) {
+        button.replaceWith(document.createTextNode(`[${citationNum}]`));
+      } else {
+        button.remove();
       }
     });
 
