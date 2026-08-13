@@ -46,15 +46,17 @@ This extension does not use any third-party services, analytics, or tracking too
 Citation mappings themselves are held in memory only while you are on a Gemini Notebook page and
 are discarded when you close the tab.
 
-The extension does use `chrome.storage.sync` for three things, all of which stay inside your own
-Google account and are never sent to us or to any third party:
+The extension does store three things. None of them is ever sent to us or to any third party:
 
-- `settings` - your theme choice and export preferences
-- `citationHistory` - the copies you have made, so you can retrieve them from the settings page
-- `statistics` - local counters, for example how many citations you have exported
+- `settings` - your theme choice and export preferences. Stored with `chrome.storage.sync`, so
+  Chrome replicates it across devices where you are signed into the same Google account.
+- `citationHistory` - the copies you have made, so you can retrieve them from the settings page.
+  Stored with `chrome.storage.local`, so it never leaves the device it was created on.
+- `statistics` - counters, for example how many citations you have exported. Also stored with
+  `chrome.storage.local` and device-local.
 
-You can delete all three at any time from the extension's settings page. Uninstalling the
-extension removes them as well.
+You can delete all three at any time from the extension's settings page, either individually via
+"Clear History" or together via "Clear All Data". Uninstalling the extension removes them as well.
 
 ## Updates
 

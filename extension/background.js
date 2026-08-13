@@ -5,12 +5,16 @@ importScripts('constants.js');
 chrome.runtime.onInstalled.addListener(() => {
   console.log('NotebookLM Citation Mapper installed');
 
-  // Set up context menu (optional)
-  chrome.contextMenus.create({
-    id: 'notebooklm-citation-mapper',
-    title: 'Show Citation Mappings',
-    contexts: ['page'],
-    documentUrlPatterns: NOTEBOOK_URL_PATTERNS
+  // Set up context menu (optional).
+  // removeAll() first: onInstalled also fires on every update, and creating an
+  // id that already exists sets runtime.lastError instead of replacing it.
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'notebooklm-citation-mapper',
+      title: 'Show Citation Mappings',
+      contexts: ['page'],
+      documentUrlPatterns: NOTEBOOK_URL_PATTERNS
+    });
   });
 });
 

@@ -89,6 +89,10 @@ The extension uses three main components:
 - Fixed every paragraph appearing twice in copied output
 - Added a selector contract test so the next interface change is diagnosable in seconds
 
+**After updating, reload any Gemini Notebook tab you already had open.** Chrome only injects
+content scripts when a page loads, so tabs opened before the update stay unpatched until you
+refresh them.
+
 ## Contributing
 
 Contributions are welcome! If you encounter issues or have ideas for improvements:

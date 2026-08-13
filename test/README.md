@@ -21,7 +21,7 @@ reports "it stopped working", run this first. It tells you which assumption brok
 | C4 | Expanding does not reveal hidden citations. Users get an incomplete list. |
 | C5 | The chat container moved. Copy-with-citations returns nothing. |
 | C6 | The innermost-match filter no longer deduplicates. Copied text contains paragraphs twice. |
-| C7 | Informational. Reports markers without a numeric span, which must be removed during extraction. |
+| C7 | Ligature text survives extraction. Copied output will contain `more_horiz` where citations were collapsed. |
 
 These checks describe what the DOM offers, not what `extension/content.js` currently does
 with it. All of them passing means the extraction strategy is still viable. It does not by
@@ -46,3 +46,8 @@ editing both files.
 Last verified on 2026-08-13 against notebook.google.com: all checks pass. Reference numbers
 from that run, useful for spotting drift: 9 collapsed-citation buttons, 24 citations visible
 before expanding and 35 after, 29 paragraph candidates reduced to 26 innermost matches.
+
+C6 and C7 replay the extraction strategy on a throwaway clone rather than asserting something
+about the raw DOM, so they fail when the strategy stops working. Both were confirmed to fail
+against the pre-1.3.0 logic (C7 reported 9 surviving `more_horiz` occurrences), which is the
+point of keeping them.

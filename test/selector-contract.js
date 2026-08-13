@@ -119,17 +119,37 @@
   );
 
   // --- C7: no ligature text leaks into extracted output --------------------
+  // Citation markers without a numeric <span> are the "more_horiz" ligature
+  // buttons. Extraction has to remove them; replacing only the numeric ones
+  // leaves the raw ligature text in the copied output. Replaying that step on
+  // a throwaway clone proves the strategy still holds.
   const nonNumericMarkers = Array.from(
     document.querySelectorAll('button.citation-marker')
   ).filter(button => {
     const span = button.querySelector('span');
     return !span || !/^\d+$/.test(span.textContent.trim());
   });
+
+  let ligatureLeaks = -1;
+  if (main) {
+    const probe = main.cloneNode(true);
+    probe.querySelectorAll('button.citation-marker, .citation-marker').forEach(button => {
+      const span = button.querySelector('span');
+      const citationNum = span ? span.textContent.trim() : '';
+      if (/^\d+$/.test(citationNum)) {
+        button.replaceWith(document.createTextNode(`[${citationNum}]`));
+      } else {
+        button.remove();
+      }
+    });
+    ligatureLeaks = (probe.textContent.match(/more_horiz/g) || []).length;
+  }
+
   check(
-    'C7 non-numeric citation markers are accounted for',
-    true, // informational: the fix must remove these, not replace them
-    `${nonNumericMarkers.length} markers without a numeric span ` +
-      '(these must be REMOVED during extraction, not left in place)'
+    'C7 extraction leaves no ligature text behind',
+    ligatureLeaks === 0,
+    `${nonNumericMarkers.length} markers without a numeric span, ` +
+      `${ligatureLeaks} "more_horiz" occurrences survived marker replacement`
   );
 
   const passed = results.filter(r => r.status === 'PASS').length;
