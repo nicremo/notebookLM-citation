@@ -145,6 +145,7 @@ English (Deutsch optional)
 Works again after Google renamed NotebookLM to Gemini Notebook:
 - Supports the new address notebook.google.com (the old one kept working via redirect, which is why the extension stopped being loaded at all)
 - Collapsed citations are expanded again, so no sources are silently skipped
+- Citation numbers now stay consistent across a whole conversation, so a number always points at the same document
 - Removed stray icon text and duplicated paragraphs from copied output
 - Copies no longer pick up the product announcement banner
 

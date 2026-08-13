@@ -86,10 +86,13 @@ The extension uses three main components:
 - Works again after Google renamed NotebookLM to Gemini Notebook and moved the app to `notebook.google.com`
 - Fixed collapsed citations being silently skipped, which dropped roughly a third of all citations
 - Fixed `more_horiz` icon text leaking into copied output
-- Fixed every paragraph appearing twice in copied output
+- Fixed every paragraph appearing twice in copied output, reported by [@ccchan234](https://github.com/ccchan234) in #5
 - Fixed the product announcement banner being copied along with the answer
 - Fixed a notebook with no chat yet copying hidden accessibility text instead of reporting that there is nothing to copy
+- Fixed citation numbers pointing at the wrong source in conversations with more than one answer, contributed by [@Jasaj4](https://github.com/Jasaj4) in #8. Gemini Notebook numbers citations per response, so the same `[1]` meant different documents in different answers
 - Added a selector contract test so the next interface change is diagnosable in seconds
+
+Thanks to [@ejgmd-gh](https://github.com/ejgmd-gh) for reporting the outage in #9 and correctly guessing the cause, and to [@fothot2](https://github.com/fothot2) for independently diagnosing it and opening #10.
 
 **After updating, reload any Gemini Notebook tab you already had open.** Chrome only injects
 content scripts when a page loads, so tabs opened before the update stay unpatched until you
