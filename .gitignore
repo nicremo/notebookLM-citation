@@ -21,3 +21,6 @@ logs/
 
 # Misc
 Thumbs.db
+
+# Local working notes, not part of the shipped extension
+docs/superpowers/
