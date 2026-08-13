@@ -28,9 +28,9 @@ NotebookLM Citation Mapper is a Chrome extension that enhances your experience w
 - **What we access:** Permission to write text to your system clipboard
 - **What we don't do:** We never read from your clipboard or access clipboard history
 
-#### `host_permissions` for `https://notebooklm.google.com/*`
-- **Why we need it:** To function specifically on Google NotebookLM pages
-- **What we access:** Only pages on notebooklm.google.com domain
+#### `host_permissions` for `https://notebook.google.com/*` and `https://notebooklm.google.com/*`
+- **Why we need it:** To function specifically on Gemini Notebook pages (formerly NotebookLM)
+- **What we access:** Only pages on the notebook.google.com and notebooklm.google.com domains
 - **What we don't do:** We never access any other websites or Google services
 
 ## Local Processing
@@ -43,7 +43,20 @@ This extension does not use any third-party services, analytics, or tracking too
 
 ## Data Storage
 
-The extension does not use `chrome.storage` or any other persistent storage mechanism. Citation mappings are stored temporarily in memory only while you're on a NotebookLM page and are discarded when you close the tab.
+Citation mappings themselves are held in memory only while you are on a Gemini Notebook page and
+are discarded when you close the tab.
+
+The extension does store three things. None of them is ever sent to us or to any third party:
+
+- `settings` - your theme choice and export preferences. Stored with `chrome.storage.sync`, so
+  Chrome replicates it across devices where you are signed into the same Google account.
+- `citationHistory` - the copies you have made, so you can retrieve them from the settings page.
+  Stored with `chrome.storage.local`, so it never leaves the device it was created on.
+- `statistics` - counters, for example how many citations you have exported. Also stored with
+  `chrome.storage.local` and device-local.
+
+You can delete all three at any time from the extension's settings page, either individually via
+"Clear History" or together via "Clear All Data". Uninstalling the extension removes them as well.
 
 ## Updates
 

@@ -1,15 +1,20 @@
 // background.js - Background service worker for NotebookLM Citation Mapper
+importScripts('constants.js');
 
 // Listen for extension installation
 chrome.runtime.onInstalled.addListener(() => {
   console.log('NotebookLM Citation Mapper installed');
 
-  // Set up context menu (optional)
-  chrome.contextMenus.create({
-    id: 'notebooklm-citation-mapper',
-    title: 'Show Citation Mappings',
-    contexts: ['page'],
-    documentUrlPatterns: ['https://notebooklm.google.com/*']
+  // Set up context menu (optional).
+  // removeAll() first: onInstalled also fires on every update, and creating an
+  // id that already exists sets runtime.lastError instead of replacing it.
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'notebooklm-citation-mapper',
+      title: 'Show Citation Mappings',
+      contexts: ['page'],
+      documentUrlPatterns: NOTEBOOK_URL_PATTERNS
+    });
   });
 });
 
@@ -18,21 +23,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'notebooklm-citation-mapper') {
     // Send message to content script to show mappings
     chrome.tabs.sendMessage(tab.id, { action: 'showMappings' });
-  }
-});
-
-// Listen for tab updates to inject content script if needed
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('notebooklm.google.com')) {
-    // Content script should be automatically injected via manifest
-    // This is just a fallback if needed
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['content.js']
-    }).catch(err => {
-      // Script might already be injected
-      console.log('Script injection skipped:', err.message);
-    });
   }
 });
 

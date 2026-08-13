@@ -1,19 +1,24 @@
 {
   "manifest_version": 3,
   "name": "NotebookLM Citation Mapper",
-  "version": "1.2.0",
-  "description": "Maps citation numbers to source filenames in Google NotebookLM. Now with Rich Text copy and PDF export!",
+  "version": "1.3.0",
+  "description": "Maps citation numbers to source filenames in Gemini Notebook (formerly NotebookLM). Now with Rich Text copy and PDF export!",
   "permissions": [
     "activeTab",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
+    "https://notebook.google.com/*",
     "https://notebooklm.google.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://notebooklm.google.com/*"],
+      "matches": [
+        "https://notebook.google.com/*",
+        "https://notebooklm.google.com/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

@@ -34,7 +34,7 @@ NotebookLM Citation Mapper helps you preserve citation references when copying t
 
 ### 🎯 How It Works
 
-1. Open any notebook in Google NotebookLM
+1. Open any notebook in Gemini Notebook (notebook.google.com)
 2. The extension automatically scans for citations
 3. Click the extension icon to see all detected citations
 4. Click "Copy Text with Citations" to get your formatted text
@@ -77,7 +77,7 @@ Sources:
 ### 📝 Requirements
 
 - Google Chrome or Chromium-based browser
-- Access to Google NotebookLM
+- Access to Gemini Notebook (formerly Google NotebookLM)
 - That's it!
 
 ### 🤝 Open Source
@@ -107,6 +107,7 @@ English (Deutsch optional)
 
 ## Tags/Keywords
 - notebooklm
+- gemini notebook
 - citations
 - research
 - clipboard
@@ -138,14 +139,17 @@ English (Deutsch optional)
 5. **Settings/options** (if any)
 
 ## Version
-1.0.0
+1.3.0
 
 ## What's New in This Version
-Initial release with core features:
-- Copy chat text with preserved citations
-- Automatic citation mapping
-- Citation legend export
-- Manual rescan functionality
+Works again after Google renamed NotebookLM to Gemini Notebook:
+- Supports the new address notebook.google.com (the old one kept working via redirect, which is why the extension stopped being loaded at all)
+- Collapsed citations are expanded again, so no sources are silently skipped
+- Citation numbers now stay consistent across a whole conversation, so a number always points at the same document
+- Removed stray icon text and duplicated paragraphs from copied output
+- Copies no longer pick up the product announcement banner
+
+After updating, reload any Gemini Notebook tab you already had open.
 
 ## Developer Information
 - **Developer Name:** Your Name/Organization
