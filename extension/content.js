@@ -14,6 +14,14 @@
     return text === 'more_horiz' || text === '...' || text === '…';
   }
 
+  // Clicking a button mutates the DOM, which wakes the MutationObserver below,
+  // which calls mapCitations() again. That settles on its own as long as an
+  // expanded group stays expanded. If Angular ever re-collapses a group, the
+  // two would keep triggering each other, so never click the same node twice.
+  // A WeakSet lets discarded nodes be collected, and a genuinely new group
+  // arrives as a new node, so it still gets expanded.
+  const clickedEllipses = new WeakSet();
+
   async function expandAllCitationEllipses() {
     let clicked = 0;
 
@@ -22,11 +30,14 @@
     for (let round = 0; round < 3; round++) {
       const buttons = Array.from(
         document.querySelectorAll('button.citation-marker')
-      ).filter(isEllipsisButton);
+      ).filter(button => isEllipsisButton(button) && !clickedEllipses.has(button));
 
       if (!buttons.length) break;
 
-      buttons.forEach(button => button.click());
+      buttons.forEach(button => {
+        clickedEllipses.add(button);
+        button.click();
+      });
       clicked += buttons.length;
       await new Promise(res => setTimeout(res, 400));
     }
