@@ -1,6 +1,10 @@
 # NotebookLM Citation Mapper
 
-A Chrome extension that automatically maps citation numbers to source filenames in Google NotebookLM and allows you to copy chat text with preserved citations.
+A Chrome extension that automatically maps citation numbers to source filenames in Gemini Notebook (formerly Google NotebookLM) and allows you to copy chat text with preserved citations.
+
+> **Note:** Google renamed NotebookLM to Gemini Notebook in July 2026 and moved the app to
+> `notebook.google.com`. Version 1.3.0 and later support the new address. Older versions stop
+> working because the browser no longer matches them against the page.
 
 ## Features
 
@@ -26,7 +30,7 @@ A Chrome extension that automatically maps citation numbers to source filenames 
 
 ## Usage
 
-1. Navigate to [notebooklm.google.com](https://notebooklm.google.com)
+1. Navigate to [notebook.google.com](https://notebook.google.com) (formerly notebooklm.google.com)
 
 2. The extension will automatically:
    - Scan for citations in the current notebook
@@ -70,9 +74,20 @@ The extension uses three main components:
 
 ## Known Limitations
 
-- The citation mapping relies on NotebookLM's DOM structure and `aria-label` attributes
-- May break if Google significantly changes NotebookLM's interface
+- The citation mapping relies on Gemini Notebook's DOM structure and `aria-label` attributes
+- May break if Google significantly changes the interface. When that happens, run
+  `test/selector-contract.js` in the DevTools console to see which assumption broke
 - Chat text extraction uses heuristics and may occasionally miss content
+
+## Changelog
+
+### 1.3.0
+
+- Works again after Google renamed NotebookLM to Gemini Notebook and moved the app to `notebook.google.com`
+- Fixed collapsed citations being silently skipped, which dropped roughly a third of all citations
+- Fixed `more_horiz` icon text leaking into copied output
+- Fixed every paragraph appearing twice in copied output
+- Added a selector contract test so the next interface change is diagnosable in seconds
 
 ## Contributing
 

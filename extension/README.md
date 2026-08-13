@@ -39,7 +39,7 @@ When you copy text from NotebookLM's chat interface, the citation numbers (like 
 
 ### Basic Usage
 
-1. Navigate to Google NotebookLM (https://notebooklm.google.com)
+1. Navigate to Gemini Notebook (https://notebook.google.com)
 2. Open a notebook and start a chat
 3. Click the extension icon to see current citation mappings
 4. Copy text from the chat - citations will be automatically included
@@ -71,7 +71,7 @@ All citation processing happens locally in your browser. No data is sent to exte
 
 - **Manifest Version**: 3
 - **Permissions**: activeTab, clipboardWrite, storage
-- **Host Permissions**: https://notebooklm.google.com/*
+- **Host Permissions**: https://notebook.google.com/*, https://notebooklm.google.com/*
 - **Background**: Service worker for state management
 - **Content Scripts**: Injected at document_idle
 

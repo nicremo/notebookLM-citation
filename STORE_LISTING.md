@@ -34,7 +34,7 @@ NotebookLM Citation Mapper helps you preserve citation references when copying t
 
 ### 🎯 How It Works
 
-1. Open any notebook in Google NotebookLM
+1. Open any notebook in Gemini Notebook (notebook.google.com)
 2. The extension automatically scans for citations
 3. Click the extension icon to see all detected citations
 4. Click "Copy Text with Citations" to get your formatted text
@@ -77,7 +77,7 @@ Sources:
 ### 📝 Requirements
 
 - Google Chrome or Chromium-based browser
-- Access to Google NotebookLM
+- Access to Gemini Notebook (formerly Google NotebookLM)
 - That's it!
 
 ### 🤝 Open Source
@@ -107,6 +107,7 @@ English (Deutsch optional)
 
 ## Tags/Keywords
 - notebooklm
+- gemini notebook
 - citations
 - research
 - clipboard
