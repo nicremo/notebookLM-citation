@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --paper: #F2E7D3;
+    --rule: #C9B694;
+    --ink: #2B2620;
+    --ink-soft: #6B6154;
+    --accent: #2D5F3F;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #777; display: flex; flex-direction: column; gap: 36px; padding: 36px; align-items: flex-start; }
+
+  .frame {
+    width: 1280px; height: 800px;
+    position: relative; overflow: hidden;
+    background: var(--paper);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    color: var(--ink);
+  }
+  .frame::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(201,182,148,0.26) 31px 32px);
+  }
+  .frame::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 85% at 15% 8%, rgba(255,252,246,0.9), rgba(227,208,177,0) 60%);
+  }
+  .body { position: relative; z-index: 2; height: 100%; padding: 62px 70px; display: flex; flex-direction: column; }
+
+  .kicker {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 18px;
+  }
+  h2 { font-size: 52px; line-height: 1.06; font-weight: 600; letter-spacing: -0.012em; }
+  .sub { font-size: 23px; line-height: 1.5; color: var(--ink-soft); margin-top: 16px; max-width: 46ch; }
+
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; margin-top: 34px; min-height: 0; }
+  .stage.split { justify-content: space-between; gap: 56px; align-items: center; }
+  .shot { box-shadow: 0 18px 44px rgba(43,38,32,0.22); border: 1px solid rgba(43,38,32,0.14); display: block;
+           max-height: 100%; max-width: 100%; object-fit: contain; }
+
+  /* text-based visuals, drawn rather than screenshotted */
+  .doc {
+    background: #FFFFFF; border: 1px solid var(--rule);
+    box-shadow: 0 18px 44px rgba(43,38,32,0.18);
+    padding: 44px 48px; width: 660px;
+  }
+  .doc p { font-size: 19px; line-height: 1.7; margin-bottom: 16px; }
+  .doc .mk { color: var(--accent); font-weight: 700; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 26px 0 20px; }
+  .doc .lbl {
+    font-family: "SF Mono", Menlo, monospace; font-size: 12px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 14px;
+  }
+  .doc .src { font-family: "SF Mono", Menlo, monospace; font-size: 15px; margin-bottom: 9px; }
+  .doc .src b { color: var(--accent); }
+
+  .note {
+    font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: var(--ink-soft);
+    letter-spacing: 0.02em; margin-top: 18px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1.5px solid var(--accent); color: var(--accent);
+    font-family: "SF Mono", Menlo, monospace; font-size: 13px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 9px 16px; margin-top: 26px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 1: popup in action -->
+<div class="frame" id="f1">
+  <div class="body">
+    <div class="kicker">One click</div>
+    <h2>Every citation, matched to its source</h2>
+    <div class="sub">Open a notebook and the extension has already read the citation markers and resolved each number to the document it came from.</div>
+    <div class="stage split">
+      <div>
+        <div class="doc" style="width:520px">
+          <p>The research shows significant improvement <span class="mk">[1]</span>. Several studies confirm this finding <span class="mk">[2]</span><span class="mk">[3]</span>.</p>
+          <hr>
+          <div class="lbl">Sources</div>
+          <div class="src"><b>[1]</b> Research_Paper_2024.pdf</div>
+          <div class="src"><b>[2]</b> Study_Results.docx</div>
+          <div class="src"><b>[3]</b> Analysis_Report.pdf</div>
+        </div>
+        <div class="badge">This is what lands on your clipboard</div>
+      </div>
+      <img class="shot" src="popup-raw.png" style="width:330px">
+    </div>
+  </div>
+</div>
+
+<!-- 2: the problem it solves -->
+<div class="frame" id="f2">
+  <div class="body">
+    <div class="kicker">The problem</div>
+    <h2>Numbers alone prove nothing</h2>
+    <div class="sub">Copy an answer out of Gemini Notebook and the citation numbers survive, but what they point to does not. Every claim becomes untraceable.</div>
+    <div class="stage split" style="align-items:stretch">
+      <div class="doc" style="width:520px; opacity:0.72">
+        <div class="lbl" style="color:#A33">Without the extension</div>
+        <p>The research shows significant improvement <span style="color:#A33">[1]</span>. Several studies confirm this finding <span style="color:#A33">[2]</span><span style="color:#A33">[3]</span>.</p>
+        <p style="color:#8A8378; font-size:17px; font-style:italic">[1] refers to what, exactly?</p>
+      </div>
+      <div class="doc" style="width:520px">
+        <div class="lbl">With the extension</div>
+        <p>The research shows significant improvement <span class="mk">[1]</span>. Several studies confirm this finding <span class="mk">[2]</span><span class="mk">[3]</span>.</p>
+        <hr>
+        <div class="src"><b>[1]</b> Research_Paper_2024.pdf</div>
+        <div class="src"><b>[2]</b> Study_Results.docx</div>
+        <div class="src"><b>[3]</b> Analysis_Report.pdf</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3: settings -->
+<div class="frame" id="f3">
+  <div class="body">
+    <div class="kicker">Format options</div>
+    <h2>Shape the output to fit your workflow</h2>
+    <div class="sub">Choose the citation style, the heading above the source list and how each entry is written. A live preview shows the result before you copy.</div>
+    <div class="stage">
+      <img class="shot" src="settings-raw.png" style="width:980px">
+    </div>
+  </div>
+</div>
+
+<!-- 4: export formats -->
+<div class="frame" id="f4">
+  <div class="body">
+    <div class="kicker">Four ways out</div>
+    <h2>Plain text, rich text, PDF or just the list</h2>
+    <div class="sub">Paste into Word, Docs or Notion with formatting intact, hand over a finished PDF, or take only the numbered source list when that is all you need.</div>
+    <div class="stage split">
+      <div class="doc" style="width:470px">
+        <div class="lbl">Exported PDF</div>
+        <p style="font-size:17px">Both sources share the same goal: making language models faster and more memory efficient at inference time <span class="mk">[1]</span><span class="mk">[2]</span>.</p>
+        <hr>
+        <div class="lbl">Sources</div>
+        <div class="src"><b>[1]</b> High_Throughput_Inference.pdf</div>
+        <div class="src"><b>[2]</b> Attention_Study.pdf</div>
+      </div>
+      <div style="width:470px">
+        <div class="doc" style="width:100%; padding:32px 34px">
+          <div class="lbl">Citation list only</div>
+          <div class="src"><b>[1]</b> Research_Paper_2024.pdf</div>
+          <div class="src"><b>[2]</b> Study_Results.docx</div>
+          <div class="src"><b>[3]</b> Analysis_Report.pdf</div>
+        </div>
+        <div class="note">Rich text keeps bold, lists and citation styling<br>when pasted into Word, Google Docs or Notion.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Palette lifted from the extension icon:
+     paper #E3D0B1, forest accent #2D5F3F, rule #C3B195 */
+  :root {
+    --paper: #F2E7D3;
+    --paper-deep: #E3D0B1;
+    --rule: #C9B694;
+    --ink: #2B2620;
+    --ink-soft: #6B6154;
+    --accent: #2D5F3F;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #888; display: flex; flex-direction: column; gap: 40px; padding: 40px; align-items: flex-start; }
+
+  .tile {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    color: var(--ink);
+  }
+
+  /* faint ruled-paper texture, echoing the stacked sheets in the icon */
+  .tile::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      rgba(201, 182, 148, 0.28) 27px 28px
+    );
+    pointer-events: none;
+  }
+  /* warm vignette so the sheet reads as paper, not flat fill */
+  .tile::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(120% 90% at 18% 10%, rgba(255,252,246,0.85), rgba(227,208,177,0) 62%);
+    pointer-events: none;
+  }
+
+  .inner { position: relative; z-index: 2; height: 100%; display: flex; }
+
+  /* ---------------- large tile 1400x560 ---------------- */
+  #large { width: 1400px; height: 560px; }
+  #large .inner { padding: 74px 80px; align-items: center; gap: 84px; }
+  #large .left { flex: 1 1 0; }
+  #large .kicker {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 17px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 26px;
+  }
+  #large h1 { font-size: 82px; line-height: 0.98; font-weight: 600; letter-spacing: -0.015em; }
+  #large h1 .sub { display: block; font-size: 40px; font-weight: 400; color: var(--ink-soft); margin-top: 16px; letter-spacing: 0; }
+  #large .claim { font-size: 27px; line-height: 1.45; color: var(--ink-soft); margin-top: 34px; max-width: 20ch; }
+
+  /* the proof panel: what you actually get when you paste */
+  .panel {
+    flex: 0 0 470px;
+    background: #FCF8F0;
+    border: 1px solid var(--rule);
+    box-shadow: 10px 12px 0 rgba(43, 38, 32, 0.07);
+    padding: 34px 36px;
+  }
+  .panel .line { font-size: 20px; line-height: 1.65; color: var(--ink); }
+  .panel .marker { color: var(--accent); font-weight: 700; }
+  .panel .rule { height: 1px; background: var(--rule); margin: 26px 0 20px; }
+  .panel .srclabel {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 16px;
+  }
+  .panel .src {
+    display: flex; align-items: baseline; gap: 12px;
+    font-family: "SF Mono", Menlo, monospace; font-size: 16px;
+    color: var(--ink); margin-bottom: 11px;
+  }
+  .panel .src b { color: var(--accent); font-weight: 700; }
+
+  /* ---------------- small tile 440x280 ---------------- */
+  #small { width: 440px; height: 280px; }
+  #small .inner { padding: 38px 40px; flex-direction: column; justify-content: center; }
+  #small .badge {
+    width: 74px; height: 74px;
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 700; color: var(--accent);
+    margin-bottom: 26px;
+  }
+  #small h2 { font-size: 40px; line-height: 1.04; font-weight: 600; letter-spacing: -0.01em; }
+  #small .sub { font-size: 21px; color: var(--ink-soft); margin-top: 10px; }
+  #small .foot {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent); margin-top: 22px;
+  }
+</style>
+</head>
+<body>
+
+<div class="tile" id="large">
+  <div class="inner">
+    <div class="left">
+      <div class="kicker">Chrome Extension</div>
+      <h1>Citation Mapper<span class="sub">for Gemini Notebook</span></h1>
+      <div class="claim">Copy your answer.<br>Keep your sources.</div>
+    </div>
+    <div class="panel">
+      <div class="line">
+        The research shows significant improvement <span class="marker">[1]</span>. Several studies confirm this finding <span class="marker">[2]</span><span class="marker">[3]</span>.
+      </div>
+      <div class="rule"></div>
+      <div class="srclabel">Sources</div>
+      <div class="src"><b>[1]</b> Research_Paper_2024.pdf</div>
+      <div class="src"><b>[2]</b> Study_Results.docx</div>
+      <div class="src"><b>[3]</b> Analysis_Report.pdf</div>
+    </div>
+  </div>
+</div>
+
+<div class="tile" id="small">
+  <div class="inner">
+    <div class="badge">[1]</div>
+    <h2>Citation Mapper</h2>
+    <div class="sub">for Gemini Notebook</div>
+    <div class="foot">Sources stay attached</div>
+  </div>
+</div>
+
+</body>
+</html>
